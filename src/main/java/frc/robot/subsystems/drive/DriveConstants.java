@@ -52,7 +52,7 @@ public class DriveConstants {
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
-      new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+      new Slot0Configs().withKP(1).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
@@ -74,7 +74,7 @@ public class DriveConstants {
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final Current kSlipCurrent = Amps.of(120.0);
+  private static final Current kSlipCurrent = Amps.of(90.0);
 
   // Initial configs for the drive and steer motors and the azimuth encoder; these
   // cannot be null.
@@ -117,8 +117,8 @@ public class DriveConstants {
   private static final int kPigeonId = 0;
 
   // These are only used for simulation
-  private static final MomentOfInertia kSteerInertia = KilogramSquareMeters.of(0.01);
-  private static final MomentOfInertia kDriveInertia = KilogramSquareMeters.of(0.01);
+  private static final MomentOfInertia kSteerInertia = KilogramSquareMeters.of(0.004);
+  private static final MomentOfInertia kDriveInertia = KilogramSquareMeters.of(0.025);
   // Simulated voltage necessary to overcome friction
   private static final Voltage kSteerFrictionVoltage = Volts.of(0.2);
   private static final Voltage kDriveFrictionVoltage = Volts.of(0.2);

@@ -15,6 +15,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,6 +34,9 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
+import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.subsystems.outtake.OuttakeIO;
+import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -45,9 +49,11 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Elevator elevator;
+  private final Outtake outtake;
 
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandXboxController operator = new CommandXboxController(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -65,6 +71,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(DriveConstants.BackLeft),
                 new ModuleIOTalonFX(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
+        outtake = new Outtake(new OuttakeIOSpark());
         break;
 
       case SIM:
@@ -77,6 +84,7 @@ public class RobotContainer {
                 new ModuleIOSim(DriveConstants.BackLeft),
                 new ModuleIOSim(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
+        outtake = new Outtake(new OuttakeIOSpark());
         break;
 
       default:
@@ -89,6 +97,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
+        outtake = new Outtake(new OuttakeIO() {});
         break;
     }
 
@@ -126,26 +135,21 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+    elevator.setDefaultCommand(elevator.holdPosition());
 
     // Lock to 0° when A button is held
-    controller
+    driver
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> new Rotation2d()));
+                drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // Reset gyro to 0° when B button is pressed
-    controller
+    driver
         .b()
         .onTrue(
             Commands.runOnce(
@@ -154,6 +158,14 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
+
+    driver.povUp().whileTrue(outtake.setVoltage(() -> -6)).onFalse(outtake.setVoltage(() -> 0));
+    driver.povDown().whileTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
+
+    operator.y().onTrue(elevator.setTarget(() -> Units.inchesToMeters(36)));
+    operator.x().onTrue(elevator.setTarget(() -> Units.inchesToMeters(2)));
+    operator.b().onTrue(elevator.setTarget(() -> Units.inchesToMeters(18)));
+    operator.a().onTrue(elevator.setTarget(() -> Units.inchesToMeters(0)));
   }
 
   /**

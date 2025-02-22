@@ -68,5 +68,6 @@
   },
   "[java]": {
     "editor.defaultFormatter": "redhat.java"
-  }
+  },
+  "wpilib.selectDefaultSimulateExtension": false
 }

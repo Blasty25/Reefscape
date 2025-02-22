@@ -231,7 +231,9 @@ public class ModuleIOTalonFX implements ModuleIO {
   public void setDriveOpenLoop(double output) {
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
+          case Voltage -> voltageRequest.withOutput(
+              output / DriveConstants.kSpeedAt12Volts.magnitude() * 12.0);
+            //   voltageRequest.withOutput(output);
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
         });
   }
@@ -251,6 +253,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
+
           case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
         });
   }

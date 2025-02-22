@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import org.ejml.ops.IPredicateBinary;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -126,6 +128,11 @@ public class Elevator extends SubsystemBase {
     motorDisconnectedAlert.set(!inputs.motorConnected);
     followerDisconnectedAlert.set(!inputs.followerConnected);
 
+    if (kP.hasChanged(hashCode()) || kD.hasChanged(hashCode())) {
+      pid.setP(kP.getAsDouble());
+    }
+
+    atGoal = Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
     currentFilterValue = currentFilter.calculate(inputs.currentAmps);
   }
 
@@ -144,12 +151,19 @@ public class Elevator extends SubsystemBase {
                     ff2.calculateWithVelocities(
                         inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
               };
+          double pidVolts = pid.calculate(inputs.positionMeters, meters.getAsDouble());
 
-          double volts = pid.calculate(inputs.positionMeters, meters.getAsDouble()) + ffVolts;
-
+          double volts = pidVolts + ffVolts;
+          Logger.recordOutput("Elevator/ffVolts", ffVolts);
+          Logger.recordOutput("Elevator/pidVolts", pidVolts);
           io.setVoltage(volts);
           inputs.targetPositionMeters = meters.getAsDouble();
+          inputs.profiledTargetMeters = pid.getSetpoint().position;
         });
+  }
+
+  public Command holdPosition() {
+    return this.setTarget(() -> inputs.targetPositionMeters);
   }
 
   public Command setTarget(double meters) {
@@ -192,7 +206,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public int getStages() {
-    return 0;
+    return 2;
   }
 
   public Command staticCharacterization(double outputRampRate) {

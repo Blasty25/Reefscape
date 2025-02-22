@@ -7,6 +7,7 @@ public interface ElevatorIO {
   public static class ElevatorIOInputs {
     public double positionMeters = 0.0;
     public double targetPositionMeters = 0.0;
+    public double profiledTargetMeters = 0.0;
     public double velocityMetersPerSecond = 0.0;
     public boolean limitSwitch = false;
 

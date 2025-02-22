@@ -15,8 +15,7 @@ public class ElevatorIOSim implements ElevatorIO {
           0,
           ElevatorConstants.travel,
           true,
-          0,
-          null);
+          0);
   private double volts = 0.0;
 
   @Override

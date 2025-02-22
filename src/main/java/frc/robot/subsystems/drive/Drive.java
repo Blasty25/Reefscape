@@ -79,8 +79,7 @@ public class Drive extends SubsystemBase {
               DriveConstants.FrontLeft.WheelRadius,
               DriveConstants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
-              DCMotor.getKrakenX60Foc(1)
-                  .withReduction(DriveConstants.FrontLeft.DriveMotorGearRatio),
+              DCMotor.getKrakenX60(1).withReduction(DriveConstants.FrontLeft.DriveMotorGearRatio),
               DriveConstants.FrontLeft.SlipCurrent,
               1),
           getModuleTranslations());
