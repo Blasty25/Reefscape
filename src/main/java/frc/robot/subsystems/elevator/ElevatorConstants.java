@@ -25,9 +25,9 @@ public class ElevatorConstants {
   }
 
   public static final double maxVelocity = // 0.3;
-      Units.inchesToMeters(124);
+      2.7;
   public static final double maxAcceleration = // 0.3;
-      Units.inchesToMeters(110.88) / 0.3;
+      2.6 / 0.4;
 
   public static final double homingVolts = -1.0;
   public static final double homingTimeSecs = 0.2;

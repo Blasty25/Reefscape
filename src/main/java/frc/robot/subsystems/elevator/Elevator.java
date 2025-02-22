@@ -15,8 +15,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import org.ejml.ops.IPredicateBinary;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -132,7 +130,8 @@ public class Elevator extends SubsystemBase {
       pid.setP(kP.getAsDouble());
     }
 
-    atGoal = Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
+    atGoal =
+        Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
     currentFilterValue = currentFilter.calculate(inputs.currentAmps);
   }
 
@@ -160,10 +159,6 @@ public class Elevator extends SubsystemBase {
           inputs.targetPositionMeters = meters.getAsDouble();
           inputs.profiledTargetMeters = pid.getSetpoint().position;
         });
-  }
-
-  public Command holdPosition() {
-    return this.setTarget(() -> inputs.targetPositionMeters);
   }
 
   public Command setTarget(double meters) {
