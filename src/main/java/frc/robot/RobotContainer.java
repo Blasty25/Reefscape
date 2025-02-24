@@ -13,6 +13,11 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.vision.VisionConstants.camera0Name;
+import static frc.robot.subsystems.vision.VisionConstants.camera1Name;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
+
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,6 +42,10 @@ import frc.robot.subsystems.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.Arrays;
 import org.littletonrobotics.junction.Logger;
@@ -50,9 +59,10 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
-  private final Elevator elevator;
-  private final Outtake outtake;
+  public final Drive drive;
+  public final Elevator elevator;
+  public final Outtake outtake;
+  public final Vision vision;
 
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -75,6 +85,14 @@ public class RobotContainer {
                 new ModuleIOTalonFX(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVision(camera0Name, robotToCamera0) // ,
+                // new
+                // VisionIOPhotonVision(camera1Name,
+                // robotToCamera1));
+                );
         break;
 
       case SIM:
@@ -88,6 +106,11 @@ public class RobotContainer {
                 new ModuleIOSim(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSpark());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
         break;
 
       default:
@@ -101,6 +124,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
 
