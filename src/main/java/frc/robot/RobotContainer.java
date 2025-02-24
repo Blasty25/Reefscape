@@ -13,9 +13,9 @@
 
 package frc.robot;
 
+import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -37,6 +37,9 @@ import frc.robot.subsystems.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
+import frc.robot.util.AllianceFlipUtil;
+import java.util.Arrays;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -55,7 +58,7 @@ public class RobotContainer {
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
 
-  // Dashboard inputs
+  private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -101,6 +104,21 @@ public class RobotContainer {
         break;
     }
 
+    autoFactory =
+        new AutoFactory(
+            drive::getPose,
+            drive::setPose,
+            drive::followTrajectory,
+            true,
+            drive,
+            (sample, isStart) -> {
+              Logger.recordOutput(
+                  "ActiveTrajectory",
+                  Arrays.stream(sample.getPoses())
+                      .map(AllianceFlipUtil::apply)
+                      .toArray(Pose2d[]::new));
+            });
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
@@ -121,6 +139,8 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -135,14 +155,31 @@ public class RobotContainer {
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
+            () -> 0.1));
+    driver
+        .leftBumper()
+        .whileTrue(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -driver.getLeftY() * 0.25,
+                () -> -driver.getLeftX() * 0.25,
+                () -> -driver.getRightX() * 0.25,
+                () -> 0.025));
 
     // Lock to 0° when A button is held
     driver
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
-                drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> new Rotation2d()));
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> new Rotation2d(),
+                () -> 0.1));
 
     // Switch to X pattern when X button is pressed
     driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -158,13 +195,32 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    driver.povUp().whileTrue(outtake.setVoltage(() -> -6)).onFalse(outtake.setVoltage(() -> 0));
-    driver.povDown().whileTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
+    outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
 
-    operator.y().onTrue(elevator.setTarget(() -> Units.inchesToMeters(36)));
-    operator.x().onTrue(elevator.setTarget(() -> Units.inchesToMeters(2)));
-    operator.b().onTrue(elevator.setTarget(() -> Units.inchesToMeters(18)));
-    operator.a().onTrue(elevator.setTarget(() -> Units.inchesToMeters(0)));
+    driver
+        .leftTrigger()
+        .onTrue(
+            outtake
+                .setVoltage(() -> -2)
+                .until(() -> (outtake.getDetected() && elevator.intaking())));
+    driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
+
+    operator.y().onTrue(elevator.setTarget(() -> 1.76));
+    operator.x().onTrue(elevator.setTarget(() -> 1.05));
+    operator.b().onTrue(elevator.setTarget(() -> 0.63));
+    operator.a().onTrue(elevator.setTarget(() -> 0.33));
+    operator.povDown().onTrue(elevator.setTarget(() -> 0));
+    operator.povUp().onTrue(elevator.setTarget(() -> 0.057));
+    operator.povLeft().onTrue(elevator.resetEncoder());
+
+    operator
+        .leftTrigger()
+        .whileTrue(elevator.setVoltage(() -> 4))
+        .onFalse(elevator.setVoltage(() -> 0));
+    operator
+        .rightTrigger()
+        .whileTrue(elevator.setVoltage(() -> -4))
+        .onFalse(elevator.setVoltage(() -> 0));
   }
 
   /**

@@ -6,9 +6,13 @@ public interface OuttakeIO {
   @AutoLog
   public static class OuttakeIOInputs {
     public boolean motorConnected = false;
-    public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
-    public double tempCelsius = 0.0;
+    public double motorAppliedVolts = 0.0;
+    public double motorCurrentAmps = 0.0;
+    public double motorTempCelsius = 0.0;
+    public boolean sensorConnected = false;
+    public double sensorRaw = 0.0;
+    public boolean sensorDetected = false;
+    public double sensorTempCelsius = 20.0;
   }
 
   public default void processInputs(final OuttakeIOInputsAutoLogged inputs) {}

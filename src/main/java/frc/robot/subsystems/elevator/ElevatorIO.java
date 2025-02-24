@@ -11,8 +11,11 @@ public interface ElevatorIO {
     public double velocityMetersPerSecond = 0.0;
     public boolean limitSwitch = false;
 
-    public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
+    public double motorAppliedVolts = 0.0;
+    public double motorCurrentAmps = 0.0;
+
+    public double followerAppliedVolts = 0.0;
+    public double followerCurrentAmps = 0.0;
 
     public boolean motorConnected = false;
     public double motorTempCelsius = 0.0;

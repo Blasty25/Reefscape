@@ -26,6 +26,8 @@ public final class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean tuningMode = true;
 
+  public static boolean disableHAL = false;
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
@@ -70,6 +72,7 @@ public final class Constants {
 
     public static class Outtake {
       public static final int motor = 20;
+      public static final int canandcolor = 21;
     }
   }
 }

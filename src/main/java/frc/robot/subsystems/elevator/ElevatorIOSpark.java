@@ -51,8 +51,8 @@ public class ElevatorIOSpark implements ElevatorIO {
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(ElevatorConstants.current)
         .voltageCompensation(12.0)
-        .follow(RobotMap.Elevator.left)
-        .inverted(false);
+        .follow(RobotMap.Elevator.left, true)
+        .inverted(true);
     followerConfig
         .encoder
         .positionConversionFactor(ElevatorConstants.positionConversionFactor)
@@ -92,9 +92,9 @@ public class ElevatorIOSpark implements ElevatorIO {
     ifOk(
         spark,
         new DoubleSupplier[] {spark::getAppliedOutput, spark::getBusVoltage},
-        (values) -> inputs.appliedVolts = values[0] * values[1]);
+        (values) -> inputs.motorAppliedVolts = values[0] * values[1]);
 
-    ifOk(spark, spark::getOutputCurrent, (value) -> inputs.currentAmps = value);
+    ifOk(spark, spark::getOutputCurrent, (value) -> inputs.motorCurrentAmps = value);
     inputs.motorConnected = motorConnectedDebounce.calculate(!sparkStickyFault);
     ifOk(spark, spark::getMotorTemperature, (value) -> inputs.motorTempCelsius = value);
 
@@ -104,6 +104,15 @@ public class ElevatorIOSpark implements ElevatorIO {
         followerSpark,
         followerSpark::getMotorTemperature,
         (value) -> inputs.followerTempCelsius = value);
+    ifOk(
+        spark,
+        new DoubleSupplier[] {followerSpark::getAppliedOutput, followerSpark::getBusVoltage},
+        (values) -> inputs.followerAppliedVolts = values[0] * values[1]);
+
+    ifOk(
+        followerSpark,
+        followerSpark::getOutputCurrent,
+        (value) -> inputs.followerCurrentAmps = value);
   }
 
   @Override

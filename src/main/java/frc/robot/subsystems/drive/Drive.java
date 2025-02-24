@@ -15,18 +15,13 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -38,17 +33,15 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.util.LocalADStarAK;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -66,23 +59,6 @@ public class Drive extends SubsystemBase {
           Math.max(
               Math.hypot(DriveConstants.BackLeft.LocationX, DriveConstants.BackLeft.LocationY),
               Math.hypot(DriveConstants.BackRight.LocationX, DriveConstants.BackRight.LocationY)));
-
-  // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 74.088;
-  private static final double ROBOT_MOI = 6.883;
-  private static final double WHEEL_COF = 1.2;
-  private static final RobotConfig PP_CONFIG =
-      new RobotConfig(
-          ROBOT_MASS_KG,
-          ROBOT_MOI,
-          new ModuleConfig(
-              DriveConstants.FrontLeft.WheelRadius,
-              DriveConstants.kSpeedAt12Volts.in(MetersPerSecond),
-              WHEEL_COF,
-              DCMotor.getKrakenX60(1).withReduction(DriveConstants.FrontLeft.DriveMotorGearRatio),
-              DriveConstants.FrontLeft.SlipCurrent,
-              1),
-          getModuleTranslations());
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -104,6 +80,17 @@ public class Drive extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
+  private static final LoggedTunableNumber XkP =
+      new LoggedTunableNumber("Auto/X/kP", AutoConstants.Gains.x.kP);
+  private static final LoggedTunableNumber YkP =
+      new LoggedTunableNumber("Auto/Y/kP", AutoConstants.Gains.y.kP);
+  private static final LoggedTunableNumber headingkP =
+      new LoggedTunableNumber("Auto/heading/kP", AutoConstants.Gains.heading.kP);
+
+  private PIDController autoXPID = new PIDController(XkP.getAsDouble(), 0.0, 0.0);
+  private PIDController autoYPID = new PIDController(YkP.getAsDouble(), 0.0, 0.0);
+  private PIDController autoHeadingPID = new PIDController(headingkP.getAsDouble(), 0.0, 0.0);
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -122,28 +109,6 @@ public class Drive extends SubsystemBase {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
-        this::getPose,
-        this::setPose,
-        this::getChassisSpeeds,
-        this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-        PP_CONFIG,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
-          Logger.recordOutput(
-              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
-        });
-    PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> {
-          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        });
-
     // Configure SysId
     sysId =
         new SysIdRoutine(
@@ -154,6 +119,10 @@ public class Drive extends SubsystemBase {
                 (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+    autoXPID.setP(XkP.getAsDouble());
+    autoYPID.setP(YkP.getAsDouble());
+    autoHeadingPID.setP(headingkP.getAsDouble());
   }
 
   @Override
@@ -209,6 +178,18 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+
+      if (XkP.hasChanged(hashCode())) {
+        autoXPID.setP(XkP.get());
+      }
+
+      if (YkP.hasChanged(hashCode())) {
+        autoYPID.setP(YkP.get());
+      }
+
+      if (headingkP.hasChanged(hashCode())) {
+        autoHeadingPID.setP(headingkP.get());
+      }
     }
 
     // Update gyro alert
@@ -362,5 +343,29 @@ public class Drive extends SubsystemBase {
       new Translation2d(DriveConstants.BackLeft.LocationX, DriveConstants.BackLeft.LocationY),
       new Translation2d(DriveConstants.BackRight.LocationX, DriveConstants.BackRight.LocationY)
     };
+  }
+
+  public void followTrajectory(SwerveSample sample) {
+    autoHeadingPID.enableContinuousInput(-Math.PI, Math.PI);
+
+    // Get the current pose of the robot
+    Pose2d pose = getPose();
+
+    // Generate the next speeds for the robot
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + autoXPID.calculate(pose.getX(), sample.x),
+            sample.vy + autoYPID.calculate(pose.getY(), sample.y),
+            sample.omega
+                + autoHeadingPID.calculate(
+                    pose.getRotation().getRadians(),
+                    Rotation2d.fromRadians(sample.heading).getRadians()));
+
+    this.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.getRotation()));
+  }
+
+  public Rotation2d getReefAngle() {
+
+    return new Rotation2d();
   }
 }

@@ -27,8 +27,8 @@ public class ElevatorIOSim implements ElevatorIO {
 
     inputs.positionMeters = elevatorSim.getPositionMeters();
     inputs.velocityMetersPerSecond = elevatorSim.getVelocityMetersPerSecond();
-    inputs.appliedVolts = volts;
-    inputs.currentAmps = elevatorSim.getCurrentDrawAmps();
+    inputs.motorAppliedVolts = volts;
+    inputs.motorCurrentAmps = elevatorSim.getCurrentDrawAmps();
     inputs.motorTempCelsius = 20.0;
     inputs.followerTempCelsius = 20.0;
   }

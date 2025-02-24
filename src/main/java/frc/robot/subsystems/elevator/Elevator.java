@@ -126,13 +126,23 @@ public class Elevator extends SubsystemBase {
     motorDisconnectedAlert.set(!inputs.motorConnected);
     followerDisconnectedAlert.set(!inputs.followerConnected);
 
-    if (kP.hasChanged(hashCode()) || kD.hasChanged(hashCode())) {
+    if (kP.hasChanged(hashCode())) {
       pid.setP(kP.getAsDouble());
+    }
+
+    if (kD.hasChanged(hashCode())) {
+      pid.setD(kD.getAsDouble());
+    }
+
+    if (kG[2].hasChanged(hashCode())) {
+      ff2 =
+          new ElevatorFeedforward(
+              kS[2].getAsDouble(), kG[2].getAsDouble(), ElevatorConstants.Gains.kV);
     }
 
     atGoal =
         Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
-    currentFilterValue = currentFilter.calculate(inputs.currentAmps);
+    currentFilterValue = currentFilter.calculate(inputs.motorCurrentAmps);
   }
 
   public Command setTarget(DoubleSupplier meters) {
@@ -152,8 +162,8 @@ public class Elevator extends SubsystemBase {
               };
           double pidVolts = pid.calculate(inputs.positionMeters, meters.getAsDouble());
 
-          double volts = pidVolts + ffVolts;
-          Logger.recordOutput("Elevator/ffVolts", ffVolts);
+          double volts = pidVolts + ffVolts * Math.signum(pidVolts);
+          Logger.recordOutput("Elevator/ffVolts", ffVolts * Math.signum(pidVolts));
           Logger.recordOutput("Elevator/pidVolts", pidVolts);
           io.setVoltage(volts);
           inputs.targetPositionMeters = meters.getAsDouble();
@@ -174,6 +184,10 @@ public class Elevator extends SubsystemBase {
 
   public Command setVoltage(double voltage) {
     return this.setVoltage(() -> voltage);
+  }
+
+  public Command resetEncoder() {
+    return this.run(() -> io.resetEncoder(0.0));
   }
 
   public Command runCurrentZeroing() {
@@ -200,8 +214,20 @@ public class Elevator extends SubsystemBase {
     return inputs.targetPositionMeters;
   }
 
+  @AutoLogOutput(key = "Elevator/Intaking")
+  public boolean intaking() {
+    return (inputs.targetPositionMeters == 0.057) || (inputs.positionMeters < 0.2);
+  }
+
   public int getStages() {
-    return 2;
+    if (inputs.positionMeters
+        > ElevatorConstants.stageOneTravel + ElevatorConstants.stageTwoTravel) {
+      return 2;
+    } else if (inputs.positionMeters > ElevatorConstants.stageOneTravel) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 
   public Command staticCharacterization(double outputRampRate) {

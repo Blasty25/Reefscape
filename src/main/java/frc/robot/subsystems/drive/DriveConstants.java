@@ -52,7 +52,7 @@ public class DriveConstants {
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
-      new Slot0Configs().withKP(1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+      new Slot0Configs().withKP(1).withKI(0).withKD(0).withKS(0.06241).withKV(.30278);
 
   // The closed-loop output type to use for the steer motors;
   // This affects the PID/FF gains for the steer motors
@@ -70,11 +70,11 @@ public class DriveConstants {
 
   // The remote sensor feedback type to use for the steer motors;
   // When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
-  private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.FusedCANcoder;
+  private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.RemoteCANcoder;
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final Current kSlipCurrent = Amps.of(90.0);
+  private static final Current kSlipCurrent = Amps.of(95.0);
 
   // Initial configs for the drive and steer motors and the azimuth encoder; these
   // cannot be null.
@@ -109,7 +109,7 @@ public class DriveConstants {
 
   private static final double kDriveGearRatio = 6.746031746031747;
   private static final double kSteerGearRatio = 21.428571428571427;
-  private static final Distance kWheelRadius = Inches.of(2);
+  private static final Distance kWheelRadius = Inches.of(1.931);
 
   private static final boolean kInvertLeftSide = false;
   private static final boolean kInvertRightSide = true;

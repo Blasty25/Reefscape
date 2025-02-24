@@ -29,4 +29,8 @@ public class Outtake extends SubsystemBase {
   public Command setVoltage(double voltage) {
     return this.setVoltage(() -> voltage);
   }
+
+  public boolean getDetected() {
+    return inputs.sensorDetected;
+  }
 }
