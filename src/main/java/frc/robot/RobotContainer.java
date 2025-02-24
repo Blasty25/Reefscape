@@ -189,10 +189,10 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDrive(
                 drive,
-                () -> -driver.getLeftY() * 0.25,
-                () -> -driver.getLeftX() * 0.25,
-                () -> -driver.getRightX() * 0.25,
-                () -> 0.025));
+                () -> -driver.getLeftY() * 0.5,
+                () -> -driver.getLeftX() * 0.5,
+                () -> -driver.getRightX() * 0.5,
+                () -> 0.05));
 
     // Lock to 0° when A button is held
     driver
