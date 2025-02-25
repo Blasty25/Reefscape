@@ -214,12 +214,13 @@ public class RobotContainer {
 
     outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
 
-    driver
-        .leftTrigger()
-        .onTrue(
-            outtake
-                .setVoltage(() -> -2)
-                .until(() -> (outtake.getDetected() && elevator.intaking())));
+            driver
+                .leftTrigger()
+                .onTrue(
+                        outtake
+                                .setVoltage(() -> -2)
+                                .until(() -> (outtake.getDetected())).unless(() -> !elevator.intaking()))
+                .onFalse(outtake.setVoltage(() -> 0).andThen(elevator.setTarget(() -> 0.057)));
     driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 
     operator.y().onTrue(elevator.setTarget(() -> 1.76));
