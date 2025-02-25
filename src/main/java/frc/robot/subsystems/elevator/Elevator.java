@@ -3,10 +3,8 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -74,13 +71,9 @@ public class Elevator extends SubsystemBase {
   private final Alert followerDisconnectedAlert =
       new Alert("Elevator follower motor disconnected!", Alert.AlertType.kWarning);
 
-  private State setpoint = new State();
-  private Supplier<State> goal = State::new;
-
   @AutoLogOutput private boolean homed = false;
 
   private Debouncer homingDebouncer = new Debouncer(homingTimeSecs.get());
-  private Debouncer toleranceDebouncer = new Debouncer(0.25, DebounceType.kRising);
 
   @AutoLogOutput(key = "Elevator/AtGoal")
   private boolean atGoal = false;
@@ -111,7 +104,7 @@ public class Elevator extends SubsystemBase {
             ElevatorConstants.Gains.kI,
             kD.get(),
             new TrapezoidProfile.Constraints(
-                ElevatorConstants.maxVelocity, ElevatorConstants.maxAcceleration));
+                maxVelocity.getAsDouble(), maxAcceleration.getAsDouble()));
   }
 
   @Override

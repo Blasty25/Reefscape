@@ -219,6 +219,10 @@ public class FieldConstants {
     public AprilTagFieldLayout getLayout() {
       return layout;
     }
+
+    public String getLayoutString() {
+      return layoutString;
+    }
   }
 
   public record CoralObjective(int branchId, ReefLevel reefLevel) {}

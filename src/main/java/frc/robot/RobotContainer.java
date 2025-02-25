@@ -84,7 +84,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}); // disabled
 
         break;
 
