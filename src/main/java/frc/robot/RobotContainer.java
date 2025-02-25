@@ -44,7 +44,6 @@ import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.Arrays;
@@ -85,14 +84,8 @@ public class RobotContainer {
                 new ModuleIOTalonFX(DriveConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVision(camera0Name, robotToCamera0) // ,
-                // new
-                // VisionIOPhotonVision(camera1Name,
-                // robotToCamera1));
-                );
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+
         break;
 
       case SIM:
@@ -235,15 +228,15 @@ public class RobotContainer {
     operator.a().onTrue(elevator.setTarget(() -> 0.33));
     operator.povDown().onTrue(elevator.setTarget(() -> 0));
     operator.povUp().onTrue(elevator.setTarget(() -> 0.057));
-    operator.povLeft().onTrue(elevator.resetEncoder());
+    operator.povLeft().onTrue(elevator.homingSequence());
 
     operator
         .leftTrigger()
-        .whileTrue(elevator.setVoltage(() -> 4))
+        .whileTrue(elevator.setVoltage(() -> 8))
         .onFalse(elevator.setVoltage(() -> 0));
     operator
         .rightTrigger()
-        .whileTrue(elevator.setVoltage(() -> -4))
+        .whileTrue(elevator.setVoltage(() -> -8))
         .onFalse(elevator.setVoltage(() -> 0));
   }
 

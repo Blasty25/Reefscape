@@ -76,10 +76,6 @@ public class Elevator extends SubsystemBase {
 
   private State setpoint = new State();
   private Supplier<State> goal = State::new;
-  private boolean stopProfile = false;
-
-  @AutoLogOutput(key = "Elevator/HomedPositionRad")
-  private double homedPosition = 0.0;
 
   @AutoLogOutput private boolean homed = false;
 
@@ -193,7 +189,7 @@ public class Elevator extends SubsystemBase {
   public Command runCurrentZeroing() {
     return this.run(
             () -> {
-              io.setVoltage(-0.5);
+              io.setVoltage(homingVolts.getAsDouble());
               Logger.recordOutput("Elevator/Setpoint", Double.NaN);
             })
         .until(() -> currentFilterValue > 20.0)
@@ -203,6 +199,27 @@ public class Elevator extends SubsystemBase {
                 io.resetEncoder(0.0);
                 hasZeroed = true;
               }
+            });
+  }
+
+  public Command homingSequence() {
+    return Commands.startRun(
+            () -> {
+              homed = false;
+              homingDebouncer = new Debouncer(homingTimeSecs.get());
+              homingDebouncer.calculate(false);
+            },
+            () -> {
+              io.setVoltage(homingVolts.get());
+              homed =
+                  homingDebouncer.calculate(
+                      Math.abs(inputs.velocityMetersPerSecond) <= homingVelocityThresh.get());
+            })
+        .until(() -> homed)
+        .andThen(
+            () -> {
+              io.resetEncoder();
+              homed = true;
             });
   }
 
@@ -235,7 +252,6 @@ public class Elevator extends SubsystemBase {
     Timer timer = new Timer();
     return Commands.startRun(
             () -> {
-              stopProfile = true;
               timer.restart();
             },
             () -> {
@@ -247,7 +263,6 @@ public class Elevator extends SubsystemBase {
         .until(() -> inputs.velocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
         .finallyDo(
             () -> {
-              stopProfile = false;
               timer.stop();
               Logger.recordOutput("Elevator/CharacterizationOutput", state.characterizationOutput);
             });

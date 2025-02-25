@@ -18,7 +18,7 @@ public class OuttakeIOSpark implements OuttakeIO {
 
   public OuttakeIOSpark() {
     var sparkConfig = new SparkMaxConfig();
-    sparkConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20).voltageCompensation(12.0);
+    sparkConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12.0);
 
     spark = new SparkMax(RobotMap.Outtake.motor, MotorType.kBrushless);
 
