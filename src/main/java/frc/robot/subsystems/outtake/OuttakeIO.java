@@ -9,6 +9,8 @@ public interface OuttakeIO {
     public double motorAppliedVolts = 0.0;
     public double motorCurrentAmps = 0.0;
     public double motorTempCelsius = 0.0;
+    public double motorVelocityRPM = 0.0;
+    public boolean motorStalled = false;
     public boolean sensorConnected = false;
     public double sensorRaw = 0.0;
     public boolean sensorDetected = false;

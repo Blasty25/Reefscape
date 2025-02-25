@@ -19,6 +19,7 @@ import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -51,201 +52,211 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // Subsystems
-  public final Drive drive;
-  public final Elevator elevator;
-  public final Outtake outtake;
-  public final Vision vision;
+    // Subsystems
+    public final Drive drive;
+    public final Elevator elevator;
+    public final Outtake outtake;
+    public final Vision vision;
 
-  // Controller
-  private final CommandXboxController driver = new CommandXboxController(0);
-  private final CommandXboxController operator = new CommandXboxController(1);
+    // Controller
+    private final CommandXboxController driver = new CommandXboxController(0);
+    private final CommandXboxController operator = new CommandXboxController(1);
 
-  private final AutoFactory autoFactory;
-  private final LoggedDashboardChooser<Command> autoChooser;
+    private final AutoFactory autoFactory;
+    private final LoggedDashboardChooser<Command> autoChooser;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(DriveConstants.FrontLeft),
-                new ModuleIOTalonFX(DriveConstants.FrontRight),
-                new ModuleIOTalonFX(DriveConstants.BackLeft),
-                new ModuleIOTalonFX(DriveConstants.BackRight));
-        elevator = new Elevator(new ElevatorIOSpark());
-        outtake = new Outtake(new OuttakeIOSpark());
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        switch (Constants.currentMode) {
+            case REAL:
+                // Real robot, instantiate hardware IO implementations
+                drive = new Drive(
+                        new GyroIOPigeon2(),
+                        new ModuleIOTalonFX(DriveConstants.FrontLeft),
+                        new ModuleIOTalonFX(DriveConstants.FrontRight),
+                        new ModuleIOTalonFX(DriveConstants.BackLeft),
+                        new ModuleIOTalonFX(DriveConstants.BackRight));
+                elevator = new Elevator(new ElevatorIOSpark());
+                outtake = new Outtake(new OuttakeIOSpark());
+                vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
+                }, new VisionIO() {
+                }); // disabled
 
-        break;
+                break;
 
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(DriveConstants.FrontLeft),
-                new ModuleIOSim(DriveConstants.FrontRight),
-                new ModuleIOSim(DriveConstants.BackLeft),
-                new ModuleIOSim(DriveConstants.BackRight));
-        elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSpark());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
-        break;
+            case SIM:
+                // Sim robot, instantiate physics sim IO implementations
+                drive = new Drive(
+                        new GyroIO() {
+                        },
+                        new ModuleIOSim(DriveConstants.FrontLeft),
+                        new ModuleIOSim(DriveConstants.FrontRight),
+                        new ModuleIOSim(DriveConstants.BackLeft),
+                        new ModuleIOSim(DriveConstants.BackRight));
+                elevator = new Elevator(new ElevatorIOSim());
+                outtake = new Outtake(new OuttakeIOSpark());
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
+                        new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+                break;
 
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        break;
+            default:
+                // Replayed robot, disable IO implementations
+                drive = new Drive(
+                        new GyroIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        });
+                elevator = new Elevator(new ElevatorIO() {
+                });
+                outtake = new Outtake(new OuttakeIO() {
+                });
+                vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
+                }, new VisionIO() {
+                });
+                break;
+        }
+
+        autoFactory = new AutoFactory(
+                drive::getPose,
+                drive::setPose,
+                drive::followTrajectory,
+                true,
+                drive,
+                (sample, isStart) -> {
+                    Logger.recordOutput(
+                            "ActiveTrajectory",
+                            Arrays.stream(sample.getPoses())
+                                    .map(AllianceFlipUtil::apply)
+                                    .toArray(Pose2d[]::new));
+                });
+
+        // Set up auto routines
+        autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
+        autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
+
+        // Set up SysId routines
+        autoChooser.addOption(
+                "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+        autoChooser.addOption(
+                "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+        autoChooser.addOption(
+                "Drive SysId (Quasistatic Forward)",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+                "Drive SysId (Quasistatic Reverse)",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        autoChooser.addOption(
+                "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+                "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+
+        // Configure the button bindings
+        configureButtonBindings();
     }
 
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
+    /**
+     * Use this method to define your button->command mappings. Buttons can be
+     * created by
+     * instantiating a {@link GenericHID} or one of its subclasses ({@link
+     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+     * it to a {@link
+     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+     */
+    private void configureButtonBindings() {
+        // Default command, normal field-relative drive
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(
+                        drive,
+                        () -> -driver.getLeftY(),
+                        () -> -driver.getLeftX(),
+                        () -> -driver.getRightX(),
+                        () -> 0.1));
+        driver
+                .leftBumper()
+                .whileTrue(
+                        DriveCommands.joystickDrive(
+                                drive,
+                                () -> -driver.getLeftY() * 0.5,
+                                () -> -driver.getLeftX() * 0.5,
+                                () -> -driver.getRightX() * 0.5,
+                                () -> 0.05));
 
-    // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
-    autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
+        // Lock to 0° when A button is held
+        driver
+                .a()
+                .whileTrue(
+                        DriveCommands.joystickDriveAtAngle(
+                                drive,
+                                () -> -driver.getLeftY(),
+                                () -> -driver.getLeftX(),
+                                () -> new Rotation2d(),
+                                () -> 0.1));
 
-    // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // Switch to X pattern when X button is pressed
+        driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+        // Reset gyro to 0° when B button is pressed
+        driver
+                .b()
+                .onTrue(
+                        Commands.runOnce(
+                                () -> drive.setPose(
+                                        new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                                drive)
+                                .ignoringDisable(true));
 
-    // Configure the button bindings
-    configureButtonBindings();
-  }
+        driver
+                .leftTrigger()
+                .onTrue(
+                        outtake
+                                .setVoltage(() -> -2)
+                                .until(() -> (outtake.getDetected())).unless(() -> !elevator.intaking()))
+                .onFalse(outtake.setVoltage(() -> 0).andThen(elevator.setTarget(() -> 0.057))); // TODO: added idle at intake position, test
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
-  private void configureButtonBindings() {
-    // Default command, normal field-relative drive
-    drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            () -> -driver.getRightX(),
-            () -> 0.1));
-    driver
-        .leftBumper()
-        .whileTrue(
-            DriveCommands.joystickDrive(
-                drive,
-                () -> -driver.getLeftY() * 0.5,
-                () -> -driver.getLeftX() * 0.5,
-                () -> -driver.getRightX() * 0.5,
-                () -> 0.05));
+        driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 
-    // Lock to 0° when A button is held
-    driver
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> new Rotation2d(),
-                () -> 0.1));
+        operator.y().onTrue(elevator.setTarget(() -> 1.76));
+        operator.x().onTrue(elevator.setTarget(() -> 1.05));
+        operator.b().onTrue(elevator.setTarget(() -> 0.63));
+        operator.a().onTrue(elevator.setTarget(() -> 0.33));
+        operator.povDown().onTrue(elevator.setTarget(() -> 0));
+        operator.povUp().onTrue(elevator.setTarget(() -> 0.057));
 
-    // Switch to X pattern when X button is pressed
-    driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        operator.leftTrigger().onTrue(elevator.homingSequence());
 
-    // Reset gyro to 0° when B button is pressed
-    driver
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
+        operator
+                .rightTrigger()
+                .whileTrue(elevator.setVoltage(() -> 12.0 * Math.pow(MathUtil.applyDeadband(operator.getLeftY(), 0.05), 2)))
+                .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home on left, test and get Connor's feedback on input squaring
+    }
 
-    outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
-
-    driver
-        .leftTrigger()
-        .onTrue(
-            outtake
-                .setVoltage(() -> -2)
-                .until(() -> (outtake.getDetected() && elevator.intaking())));
-    driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
-
-    operator.y().onTrue(elevator.setTarget(() -> 1.76));
-    operator.x().onTrue(elevator.setTarget(() -> 1.05));
-    operator.b().onTrue(elevator.setTarget(() -> 0.63));
-    operator.a().onTrue(elevator.setTarget(() -> 0.33));
-    operator.povDown().onTrue(elevator.setTarget(() -> 0));
-    operator.povUp().onTrue(elevator.setTarget(() -> 0.057));
-    operator.povLeft().onTrue(elevator.homingSequence());
-
-    operator
-        .leftTrigger()
-        .whileTrue(elevator.setVoltage(() -> 8))
-        .onFalse(elevator.setVoltage(() -> 0));
-    operator
-        .rightTrigger()
-        .whileTrue(elevator.setVoltage(() -> -8))
-        .onFalse(elevator.setVoltage(() -> 0));
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
+    /**
+     * Use this to pass the autonomous command to the main {@link Robot} class.
+     *
+     * @return the command to run in autonomous
+     */
+    public Command getAutonomousCommand() {
+        return autoChooser.get();
+    }
 }
