@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -22,38 +24,35 @@ public class Elevator extends SubsystemBase {
   private static final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP");
   private static final LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/kD");
   private static final LoggedTunableNumber[] kS = {
-    new LoggedTunableNumber("Elevator/kS/Stage1"),
-    new LoggedTunableNumber("Elevator/kS/Stage2"),
-    new LoggedTunableNumber("Elevator/kS/Stage3")
+      new LoggedTunableNumber("Elevator/kS/Stage1"),
+      new LoggedTunableNumber("Elevator/kS/Stage2"),
+      new LoggedTunableNumber("Elevator/kS/Stage3")
   };
   private static final LoggedTunableNumber[] kG = {
-    new LoggedTunableNumber("Elevator/kG/Stage1"),
-    new LoggedTunableNumber("Elevator/kG/Stage2"),
-    new LoggedTunableNumber("Elevator/kG/Stage3")
+      new LoggedTunableNumber("Elevator/kG/Stage1"),
+      new LoggedTunableNumber("Elevator/kG/Stage2"),
+      new LoggedTunableNumber("Elevator/kG/Stage3")
   };
   private static final LoggedTunableNumber[] kA = {
-    new LoggedTunableNumber("Elevator/kA/Stage1"),
-    new LoggedTunableNumber("Elevator/kA/Stage2"),
-    new LoggedTunableNumber("Elevator/kA/Stage3")
+      new LoggedTunableNumber("Elevator/kA/Stage1"),
+      new LoggedTunableNumber("Elevator/kA/Stage2"),
+      new LoggedTunableNumber("Elevator/kA/Stage3")
   };
-  private static final LoggedTunableNumber maxVelocity =
-      new LoggedTunableNumber("Elevator/MaxVelocityMetersPerSec", ElevatorConstants.maxVelocity);
-  private static final LoggedTunableNumber maxAcceleration =
-      new LoggedTunableNumber(
-          "Elevator/MaxAccelerationMetersPerSec2", ElevatorConstants.maxAcceleration);
-  private static final LoggedTunableNumber homingVolts =
-      new LoggedTunableNumber("Elevator/HomingVolts", ElevatorConstants.homingVolts);
-  private static final LoggedTunableNumber homingTimeSecs =
-      new LoggedTunableNumber("Elevator/HomingTimeSecs", ElevatorConstants.homingTimeSecs);
-  private static final LoggedTunableNumber homingVelocityThresh =
-      new LoggedTunableNumber(
-          "Elevator/HomingVelocityThresh", ElevatorConstants.homingVelocityThresh);
-  private static final LoggedTunableNumber staticCharacterizationVelocityThresh =
-      new LoggedTunableNumber(
-          "Elevator/StaticCharacterizationVelocityThresh",
-          ElevatorConstants.staticCharacterizationVelocityThresh);
-  private static final LoggedTunableNumber tolerance =
-      new LoggedTunableNumber("Elevator/Tolerance", ElevatorConstants.tolerance);
+  private static final LoggedTunableNumber maxVelocity = new LoggedTunableNumber("Elevator/MaxVelocityMetersPerSec",
+      ElevatorConstants.maxVelocity);
+  private static final LoggedTunableNumber maxAcceleration = new LoggedTunableNumber(
+      "Elevator/MaxAccelerationMetersPerSec2", ElevatorConstants.maxAcceleration);
+  private static final LoggedTunableNumber homingVolts = new LoggedTunableNumber("Elevator/HomingVolts",
+      ElevatorConstants.homingVolts);
+  private static final LoggedTunableNumber homingTimeSecs = new LoggedTunableNumber("Elevator/HomingTimeSecs",
+      ElevatorConstants.homingTimeSecs);
+  private static final LoggedTunableNumber homingVelocityThresh = new LoggedTunableNumber(
+      "Elevator/HomingVelocityThresh", ElevatorConstants.homingVelocityThresh);
+  private static final LoggedTunableNumber staticCharacterizationVelocityThresh = new LoggedTunableNumber(
+      "Elevator/StaticCharacterizationVelocityThresh",
+      ElevatorConstants.staticCharacterizationVelocityThresh);
+  private static final LoggedTunableNumber tolerance = new LoggedTunableNumber("Elevator/Tolerance",
+      ElevatorConstants.tolerance);
 
   static {
     kP.initDefault(ElevatorConstants.Gains.kP);
@@ -66,12 +65,13 @@ public class Elevator extends SubsystemBase {
     }
   }
 
-  private final Alert motorDisconnectedAlert =
-      new Alert("Elevator leader motor disconnected!", Alert.AlertType.kWarning);
-  private final Alert followerDisconnectedAlert =
-      new Alert("Elevator follower motor disconnected!", Alert.AlertType.kWarning);
+  private final Alert motorDisconnectedAlert = new Alert("Elevator leader motor disconnected!",
+      Alert.AlertType.kWarning);
+  private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor disconnected!",
+      Alert.AlertType.kWarning);
 
-  @AutoLogOutput private boolean homed = false;
+  @AutoLogOutput
+  private boolean homed = false;
 
   private Debouncer homingDebouncer = new Debouncer(homingTimeSecs.get());
 
@@ -86,25 +86,31 @@ public class Elevator extends SubsystemBase {
 
   public boolean hasZeroed = false;
 
+  public enum ElevatorSetpoints {
+    ZERO,
+    INTAKE,
+    L1,
+    L2,
+    DEALGAE2,
+    L3,
+    L4
+  }
+
   public Elevator(ElevatorIO io) {
     this.io = io;
 
-    ff2 =
-        new ElevatorFeedforward(kS[2].get(), kG[2].get(), ElevatorConstants.Gains.kV, kA[2].get());
+    ff2 = new ElevatorFeedforward(kS[2].get(), kG[2].get(), ElevatorConstants.Gains.kV, kA[2].get());
 
-    ff1 =
-        new ElevatorFeedforward(kS[1].get(), kG[1].get(), ElevatorConstants.Gains.kV, kA[1].get());
+    ff1 = new ElevatorFeedforward(kS[1].get(), kG[1].get(), ElevatorConstants.Gains.kV, kA[1].get());
 
-    ff0 =
-        new ElevatorFeedforward(kS[0].get(), kG[0].get(), ElevatorConstants.Gains.kV, kA[0].get());
+    ff0 = new ElevatorFeedforward(kS[0].get(), kG[0].get(), ElevatorConstants.Gains.kV, kA[0].get());
 
-    pid =
-        new ProfiledPIDController(
-            kP.get(),
-            ElevatorConstants.Gains.kI,
-            kD.get(),
-            new TrapezoidProfile.Constraints(
-                maxVelocity.getAsDouble(), maxAcceleration.getAsDouble()));
+    pid = new ProfiledPIDController(
+        kP.get(),
+        ElevatorConstants.Gains.kI,
+        kD.get(),
+        new TrapezoidProfile.Constraints(
+            maxVelocity.getAsDouble(), maxAcceleration.getAsDouble()));
   }
 
   @Override
@@ -124,31 +130,25 @@ public class Elevator extends SubsystemBase {
     }
 
     if (kG[2].hasChanged(hashCode())) {
-      ff2 =
-          new ElevatorFeedforward(
-              kS[2].getAsDouble(), kG[2].getAsDouble(), ElevatorConstants.Gains.kV);
+      ff2 = new ElevatorFeedforward(
+          kS[2].getAsDouble(), kG[2].getAsDouble(), ElevatorConstants.Gains.kV);
     }
 
-    atGoal =
-        Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
+    atGoal = Math.abs(inputs.positionMeters - inputs.targetPositionMeters) < tolerance.getAsDouble();
     currentFilterValue = currentFilter.calculate(inputs.motorCurrentAmps);
   }
 
   public Command setTarget(DoubleSupplier meters) {
     return this.run(
         () -> {
-          double ffVolts =
-              switch (getStages()) {
-                case 0 -> ffVolts =
-                    ff0.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
-                case 1 -> ffVolts =
-                    ff1.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
-                default -> ffVolts =
-                    ff2.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
-              };
+          double ffVolts = switch (getStages()) {
+            case 0 -> ffVolts = ff0.calculateWithVelocities(
+                inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+            case 1 -> ffVolts = ff1.calculateWithVelocities(
+                inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+            default -> ffVolts = ff2.calculateWithVelocities(
+                inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+          };
           double pidVolts = pid.calculate(inputs.positionMeters, meters.getAsDouble());
 
           double volts = pidVolts + ffVolts * Math.signum(pidVolts);
@@ -181,10 +181,10 @@ public class Elevator extends SubsystemBase {
 
   public Command runCurrentZeroing() {
     return this.run(
-            () -> {
-              io.setVoltage(homingVolts.getAsDouble());
-              Logger.recordOutput("Elevator/Setpoint", Double.NaN);
-            })
+        () -> {
+          io.setVoltage(homingVolts.getAsDouble());
+          Logger.recordOutput("Elevator/Setpoint", Double.NaN);
+        })
         .until(() -> currentFilterValue > 20.0)
         .finallyDo(
             (interrupted) -> {
@@ -197,17 +197,16 @@ public class Elevator extends SubsystemBase {
 
   public Command homingSequence() {
     return Commands.startRun(
-            () -> {
-              homed = false;
-              homingDebouncer = new Debouncer(homingTimeSecs.get());
-              homingDebouncer.calculate(false);
-            },
-            () -> {
-              io.setVoltage(homingVolts.get());
-              homed =
-                  homingDebouncer.calculate(
-                      Math.abs(inputs.velocityMetersPerSecond) <= homingVelocityThresh.get());
-            })
+        () -> {
+          homed = false;
+          homingDebouncer = new Debouncer(homingTimeSecs.get());
+          homingDebouncer.calculate(false);
+        },
+        () -> {
+          io.setVoltage(homingVolts.get());
+          homed = homingDebouncer.calculate(
+              Math.abs(inputs.velocityMetersPerSecond) <= homingVelocityThresh.get());
+        })
         .until(() -> homed)
         .andThen(
             () -> {
@@ -230,8 +229,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public int getStages() {
-    if (inputs.positionMeters
-        > ElevatorConstants.stageOneTravel + ElevatorConstants.stageTwoTravel) {
+    if (inputs.positionMeters > ElevatorConstants.stageOneTravel + ElevatorConstants.stageTwoTravel) {
       return 2;
     } else if (inputs.positionMeters > ElevatorConstants.stageOneTravel) {
       return 1;
@@ -240,19 +238,67 @@ public class Elevator extends SubsystemBase {
     }
   }
 
+  @AutoLogOutput(key = "Elevator/Setpoint")
+  public ElevatorSetpoints getSetpoint() {
+    if (inputs.targetPositionMeters == 0.0) {
+      return ElevatorSetpoints.ZERO;
+    } else if (inputs.targetPositionMeters == 0.057) {
+      return ElevatorSetpoints.INTAKE;
+    } else if (inputs.targetPositionMeters == 0.33) {
+      return ElevatorSetpoints.L1;
+    } else if (inputs.targetPositionMeters == 0.63) {
+      return ElevatorSetpoints.L2;
+    } else if (inputs.targetPositionMeters == 0.83) {
+      return ElevatorSetpoints.DEALGAE2;
+    } else if (inputs.targetPositionMeters == 1.05) {
+      return ElevatorSetpoints.L3;
+    } else if (inputs.targetPositionMeters == 1.76) {
+      return ElevatorSetpoints.L4;
+    } else {
+      throw new IllegalArgumentException("Unknown meter value: " + inputs.targetPositionMeters);
+    }
+  }
+
+  public double getSetpointMeters(ElevatorSetpoints setpoint) {
+    switch (setpoint) {
+      case ZERO:
+        return 0.0;
+      case INTAKE:
+        return 0.057;
+      case L1:
+        return 0.33;
+      case L2:
+        return 0.63;
+      case DEALGAE2:
+        return 0.83;
+      case L3:
+        return 1.05;
+      case L4:
+        return 1.76;
+      default:
+        throw new IllegalArgumentException("Unknown setpoint: " + setpoint);
+    }
+  }
+
+  public Command setSetpoint(Supplier<ElevatorSetpoints> setpoint) {
+    return this.run(() -> {
+      setTarget(getSetpointMeters(setpoint.get()));
+    });
+  }
+
   public Command staticCharacterization(double outputRampRate) {
     final StaticCharacterizationState state = new StaticCharacterizationState();
     Timer timer = new Timer();
     return Commands.startRun(
-            () -> {
-              timer.restart();
-            },
-            () -> {
-              state.characterizationOutput = outputRampRate * timer.get();
-              io.setVoltage(state.characterizationOutput);
-              Logger.recordOutput(
-                  "Elevator/StaticCharacterizationOutput", state.characterizationOutput);
-            })
+        () -> {
+          timer.restart();
+        },
+        () -> {
+          state.characterizationOutput = outputRampRate * timer.get();
+          io.setVoltage(state.characterizationOutput);
+          Logger.recordOutput(
+              "Elevator/StaticCharacterizationOutput", state.characterizationOutput);
+        })
         .until(() -> inputs.velocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
         .finallyDo(
             () -> {
