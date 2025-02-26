@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -77,7 +76,10 @@ public class DriveCommands {
           // Get linear velocity
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(
-                  Math.pow(xSupplier.getAsDouble(), 2), Math.pow(ySupplier.getAsDouble(), 2), deadbandSupplier.getAsDouble()); // TODO: added input squaring - get feedback from james
+                  Math.pow(xSupplier.getAsDouble(), 2),
+                  Math.pow(ySupplier.getAsDouble(), 2),
+                  deadbandSupplier
+                      .getAsDouble()); // TODO: added input squaring - get feedback from james
 
           // Apply rotation deadband
           double omega =
@@ -163,7 +165,11 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
-  public static Command driveToRelativePosition(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, Supplier<Rotation2d> rotationSupplier) {
+  public static Command driveToRelativePosition(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      Supplier<Rotation2d> rotationSupplier) {
     PIDController xPID = new PIDController(AutoConstants.Gains.x.kP, 0.0, 0.0);
     PIDController yPID = new PIDController(AutoConstants.Gains.y.kP, 0.0, 0.0);
     PIDController headingPID = new PIDController(AutoConstants.Gains.heading.kP, 0.0, 0.0);
@@ -173,25 +179,24 @@ public class DriveCommands {
     headingPID.setTolerance(0.03);
 
     double xSetpoint = drive.getPose().getX() + xSupplier.getAsDouble();
-    double ySetpoint = drive.getPose().getY() + ySupplier.getAsDouble(); 
+    double ySetpoint = drive.getPose().getY() + ySupplier.getAsDouble();
 
     return Commands.runOnce(
-      () -> {
-        Pose2d pose = drive.getPose();       
+            () -> {
+              Pose2d pose = drive.getPose();
 
-        ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            xPID.calculate(pose.getX(), xSetpoint),
-            yPID.calculate(pose.getY(), ySetpoint),
-            headingPID.calculate(
-                    pose.getRotation().getRadians(),
-                    rotationSupplier.get().getRadians()));
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      xPID.calculate(pose.getX(), xSetpoint),
+                      yPID.calculate(pose.getY(), ySetpoint),
+                      headingPID.calculate(
+                          pose.getRotation().getRadians(), rotationSupplier.get().getRadians()));
 
-        drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
-      },
-      drive).until(() -> (xPID.atSetpoint() && yPID.atSetpoint()));
+              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
+            },
+            drive)
+        .until(() -> (xPID.atSetpoint() && yPID.atSetpoint()));
   }
-
 
   /**
    * Measures the velocity feedforward constants for the drive motors.
