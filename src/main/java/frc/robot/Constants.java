@@ -37,21 +37,4 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
-
-  public static class RobotMap {
-    public static class Elevator {
-      public static final int left = 10;
-      public static final int right = 11;
-    }
-
-    public static class Outtake {
-      public static final int motor = 20;
-      public static final int canandcolor = 21;
-    }
-  }
-
-  public static final class OperatorConstants {
-    public static final double deadband = 0.075;
-    public static final double precisionMode = 0.5;
-  }
 }

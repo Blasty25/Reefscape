@@ -11,10 +11,9 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.Constants.RobotMap;
 
 public class OuttakeIOSpark implements OuttakeIO {
-  private final SparkMax spark = new SparkMax(RobotMap.Outtake.motor, MotorType.kBrushless);
+  private final SparkMax spark = new SparkMax(OuttakeConstants.spark, MotorType.kBrushless);
   private final RelativeEncoder encoder = spark.getEncoder();
 
   private final Canandcolor canandcolor;
@@ -24,9 +23,12 @@ public class OuttakeIOSpark implements OuttakeIO {
 
   public OuttakeIOSpark() {
     var sparkConfig = new SparkMaxConfig();
-    sparkConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(40).voltageCompensation(12.0);
+    sparkConfig
+        .idleMode(IdleMode.kBrake)
+        .smartCurrentLimit(OuttakeConstants.current)
+        .voltageCompensation(12.0);
 
-    canandcolor = new Canandcolor(RobotMap.Outtake.canandcolor);
+    canandcolor = new Canandcolor(OuttakeConstants.canandcolor);
     canandcolor.resetFactoryDefaults();
 
     tryUntilOk(

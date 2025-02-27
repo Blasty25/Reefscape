@@ -39,7 +39,16 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class DriveCommands {
-  private DriveCommands() {}
+  private static final PIDController xPID = new PIDController(AutoConstants.Gains.x.kP, 0.0, 0.0);
+  private static final PIDController yPID = new PIDController(AutoConstants.Gains.y.kP, 0.0, 0.0);
+  private static final PIDController headingPID =
+      new PIDController(AutoConstants.Gains.heading.kP, 0.0, 0.0);
+
+  private DriveCommands() {
+    xPID.setTolerance(0.03);
+    yPID.setTolerance(0.03);
+    headingPID.setTolerance(0.03);
+  }
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y, double deadband) {
     // Apply deadband
@@ -175,13 +184,6 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       Supplier<Rotation2d> rotationSupplier) {
-    PIDController xPID = new PIDController(AutoConstants.Gains.x.kP, 0.0, 0.0);
-    PIDController yPID = new PIDController(AutoConstants.Gains.y.kP, 0.0, 0.0);
-    PIDController headingPID = new PIDController(AutoConstants.Gains.heading.kP, 0.0, 0.0);
-
-    xPID.setTolerance(0.03);
-    yPID.setTolerance(0.03);
-    headingPID.setTolerance(0.03);
 
     double xSetpoint = drive.getPose().getX() + xSupplier.getAsDouble();
     double ySetpoint = drive.getPose().getY() + ySupplier.getAsDouble();

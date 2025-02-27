@@ -10,13 +10,12 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.Constants.RobotMap;
 import java.util.function.DoubleSupplier;
 
 public class ElevatorIOSpark implements ElevatorIO {
-  private final SparkMax spark = new SparkMax(RobotMap.Elevator.left, MotorType.kBrushless);
+  private final SparkMax spark = new SparkMax(ElevatorConstants.spark, MotorType.kBrushless);
   private final SparkMax followerSpark =
-      new SparkMax(RobotMap.Elevator.right, MotorType.kBrushless);
+      new SparkMax(ElevatorConstants.followerSpark, MotorType.kBrushless);
   private final RelativeEncoder encoder = spark.getEncoder();
 
   private final Debouncer motorConnectedDebounce = new Debouncer(0.5);
@@ -51,7 +50,7 @@ public class ElevatorIOSpark implements ElevatorIO {
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(ElevatorConstants.current)
         .voltageCompensation(12.0)
-        .follow(RobotMap.Elevator.left, true)
+        .follow(ElevatorConstants.spark, true)
         .inverted(true);
     followerConfig
         .encoder
