@@ -11,13 +11,37 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LoggedTunableNumber;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
   private final ElevatorIO io;
+
+  public enum ElevatorSetpoint {
+    ZERO,
+    INTAKE,
+    L1,
+    L2,
+    DEALGAE2,
+    L3,
+    L4
+  }
+
+  public static final EnumMap<ElevatorSetpoint, Double> elevatorHeights =
+      new EnumMap<ElevatorSetpoint, Double>(
+          Map.ofEntries(
+              Map.entry(ElevatorSetpoint.ZERO, 0.0),
+              Map.entry(ElevatorSetpoint.INTAKE, 0.057),
+              Map.entry(ElevatorSetpoint.L1, 0.33),
+              Map.entry(ElevatorSetpoint.L2, 0.63),
+              Map.entry(ElevatorSetpoint.DEALGAE2, 0.81),
+              Map.entry(ElevatorSetpoint.L3, 1.05),
+              Map.entry(ElevatorSetpoint.L4, 1.76)));
 
   private static final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP");
   private static final LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/kD");
@@ -91,10 +115,8 @@ public class Elevator extends SubsystemBase {
 
     ff2 =
         new ElevatorFeedforward(kS[2].get(), kG[2].get(), ElevatorConstants.Gains.kV, kA[2].get());
-
     ff1 =
         new ElevatorFeedforward(kS[1].get(), kG[1].get(), ElevatorConstants.Gains.kV, kA[1].get());
-
     ff0 =
         new ElevatorFeedforward(kS[0].get(), kG[0].get(), ElevatorConstants.Gains.kV, kA[0].get());
 
@@ -134,9 +156,10 @@ public class Elevator extends SubsystemBase {
     currentFilterValue = currentFilter.calculate(inputs.motorCurrentAmps);
   }
 
-  public Command setTarget(DoubleSupplier meters) {
+  public Command setSetpoint(Supplier<ElevatorSetpoint> setpoint) {
     return this.run(
         () -> {
+          double meters = elevatorHeights.get(setpoint.get());
           double ffVolts =
               switch (getStages()) {
                 case 0 -> ffVolts =
@@ -149,19 +172,20 @@ public class Elevator extends SubsystemBase {
                     ff2.calculateWithVelocities(
                         inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
               };
-          double pidVolts = pid.calculate(inputs.positionMeters, meters.getAsDouble());
+          double pidVolts = pid.calculate(inputs.positionMeters, meters);
 
           double volts = pidVolts + ffVolts * Math.signum(pidVolts);
           Logger.recordOutput("Elevator/ffVolts", ffVolts * Math.signum(pidVolts));
           Logger.recordOutput("Elevator/pidVolts", pidVolts);
           io.setVoltage(volts);
-          inputs.targetPositionMeters = meters.getAsDouble();
+          inputs.setpoint = setpoint.get();
+          inputs.targetPositionMeters = meters;
           inputs.profiledTargetMeters = pid.getSetpoint().position;
         });
   }
 
-  public Command setTarget(double meters) {
-    return this.setTarget(() -> meters);
+  public Command setSetpoint(ElevatorSetpoint setpoint) {
+    return this.setSetpoint(() -> setpoint);
   }
 
   public Command setVoltage(DoubleSupplier volts) {
@@ -222,6 +246,10 @@ public class Elevator extends SubsystemBase {
 
   public double getTargetMeters() {
     return inputs.targetPositionMeters;
+  }
+
+  public ElevatorSetpoint getSetpoint() {
+    return inputs.setpoint;
   }
 
   @AutoLogOutput(key = "Elevator/Intaking")

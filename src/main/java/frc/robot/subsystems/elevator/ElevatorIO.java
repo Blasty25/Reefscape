@@ -1,11 +1,13 @@
 package frc.robot.subsystems.elevator;
 
+import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ElevatorIO {
   @AutoLog
   public static class ElevatorIOInputs {
     public double positionMeters = 0.0;
+    public ElevatorSetpoint setpoint = ElevatorSetpoint.ZERO;
     public double targetPositionMeters = 0.0;
     public double profiledTargetMeters = 0.0;
     public double velocityMetersPerSecond = 0.0;
@@ -13,9 +15,11 @@ public interface ElevatorIO {
 
     public double motorAppliedVolts = 0.0;
     public double motorCurrentAmps = 0.0;
+    public double motorVelocity = 0.0;
 
     public double followerAppliedVolts = 0.0;
     public double followerCurrentAmps = 0.0;
+    public double followerVelocity = 0.0;
 
     public boolean motorConnected = false;
     public double motorTempCelsius = 0.0;

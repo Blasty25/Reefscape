@@ -45,7 +45,9 @@ public class OuttakeIOSpark implements OuttakeIO {
     ifOk(spark, spark::getMotorTemperature, (value) -> inputs.motorTempCelsius = value);
     ifOk(spark, encoder::getVelocity, (value) -> inputs.motorVelocityRPM = value);
     inputs.motorConnected = sparkConnectedDebounce.calculate(!sparkStickyFault);
-    inputs.motorStalled = currentDebounce.calculate((Math.abs(spark.getOutputCurrent() - 40.0) < 5) && (encoder.getVelocity() < 100.0));
+    inputs.motorStalled =
+        currentDebounce.calculate(
+            (Math.abs(spark.getOutputCurrent() - 40.0) < 5) && (encoder.getVelocity() < 100.0));
 
     inputs.sensorConnected = canandcolor.isConnected();
     inputs.sensorRaw = canandcolor.getProximity();

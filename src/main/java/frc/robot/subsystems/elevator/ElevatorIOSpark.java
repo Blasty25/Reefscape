@@ -88,12 +88,11 @@ public class ElevatorIOSpark implements ElevatorIO {
   public void updateInputs(ElevatorIOInputsAutoLogged inputs) {
     sparkStickyFault = false;
     ifOk(spark, encoder::getPosition, (value) -> inputs.positionMeters = value);
-    ifOk(spark, encoder::getVelocity, (value) -> inputs.velocityMetersPerSecond = value);
+    ifOk(spark, encoder::getVelocity, (value) -> inputs.motorVelocity = value);
     ifOk(
         spark,
         new DoubleSupplier[] {spark::getAppliedOutput, spark::getBusVoltage},
         (values) -> inputs.motorAppliedVolts = values[0] * values[1]);
-
     ifOk(spark, spark::getOutputCurrent, (value) -> inputs.motorCurrentAmps = value);
     inputs.motorConnected = motorConnectedDebounce.calculate(!sparkStickyFault);
     ifOk(spark, spark::getMotorTemperature, (value) -> inputs.motorTempCelsius = value);
@@ -108,7 +107,7 @@ public class ElevatorIOSpark implements ElevatorIO {
         spark,
         new DoubleSupplier[] {followerSpark::getAppliedOutput, followerSpark::getBusVoltage},
         (values) -> inputs.followerAppliedVolts = values[0] * values[1]);
-
+    ifOk(followerSpark, encoder::getVelocity, (value) -> inputs.followerVelocity = value);
     ifOk(
         followerSpark,
         followerSpark::getOutputCurrent,

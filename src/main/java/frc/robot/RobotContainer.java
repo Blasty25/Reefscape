@@ -28,15 +28,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveCommands;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
@@ -48,6 +50,8 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -74,6 +78,8 @@ public class RobotContainer {
     private final AutoFactory autoFactory;
     private final LoggedDashboardChooser<Command> autoChooser;
 
+    private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
+
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
@@ -83,15 +89,16 @@ public class RobotContainer {
                 // Real robot, instantiate hardware IO implementations
                 drive = new Drive(
                         new GyroIOPigeon2(),
-                        new ModuleIOTalonFX(DriveConstants.FrontLeft),
-                        new ModuleIOTalonFX(DriveConstants.FrontRight),
-                        new ModuleIOTalonFX(DriveConstants.BackLeft),
-                        new ModuleIOTalonFX(DriveConstants.BackRight));
+                        new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                        new ModuleIOTalonFX(TunerConstants.FrontRight),
+                        new ModuleIOTalonFX(TunerConstants.BackLeft),
+                        new ModuleIOTalonFX(TunerConstants.BackRight));
                 elevator = new Elevator(new ElevatorIOSpark());
                 outtake = new Outtake(new OuttakeIOSpark());
-                vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
-                }, new VisionIO() {
-                }); // disabled
+                vision = new Vision(
+                        drive::addVisionMeasurement, new VisionIO() {
+                        }, new VisionIO() {
+                        }); // disabled
 
                 break;
 
@@ -100,16 +107,16 @@ public class RobotContainer {
                 drive = new Drive(
                         new GyroIO() {
                         },
-                        new ModuleIOSim(DriveConstants.FrontLeft),
-                        new ModuleIOSim(DriveConstants.FrontRight),
-                        new ModuleIOSim(DriveConstants.BackLeft),
-                        new ModuleIOSim(DriveConstants.BackRight));
+                        new ModuleIOSim(TunerConstants.FrontLeft),
+                        new ModuleIOSim(TunerConstants.FrontRight),
+                        new ModuleIOSim(TunerConstants.BackLeft),
+                        new ModuleIOSim(TunerConstants.BackRight));
                 elevator = new Elevator(new ElevatorIOSim());
                 outtake = new Outtake(new OuttakeIOSpark());
                 vision = new Vision(
-                        drive::addVisionMeasurement,
-                        new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
-                        new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+                        drive::addVisionMeasurement, new VisionIO() {
+                        }, new VisionIO() {
+                        });
                 break;
 
             default:
@@ -134,6 +141,25 @@ public class RobotContainer {
                 });
                 break;
         }
+
+        outtakeCommands = new EnumMap<ElevatorSetpoint, Command>(
+                Map.ofEntries(
+                        Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
+                        Map.entry(
+                                ElevatorSetpoint.INTAKE,
+                                Commands.parallel(
+                                        outtake
+                                                .setVoltage(() -> -2)
+                                                .until(() -> outtake.getDetected())
+                                                .andThen(outtake.setVoltage(() -> 0)))),
+                        Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
+                        Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
+                        Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
+                        Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
+                        Map.entry(
+                                ElevatorSetpoint.L4,
+                                DriveCommands.driveForTime(drive, -1, 0, 0.1)
+                                        .andThen(outtake.setVoltage(() -> -2)))));
 
         autoFactory = new AutoFactory(
                 drive::getPose,
@@ -191,16 +217,16 @@ public class RobotContainer {
                         () -> -driver.getLeftY(),
                         () -> -driver.getLeftX(),
                         () -> -driver.getRightX(),
-                        () -> 0.1));
+                        () -> OperatorConstants.deadband));
         driver
                 .leftBumper()
                 .whileTrue(
                         DriveCommands.joystickDrive(
                                 drive,
-                                () -> -driver.getLeftY() * 0.5,
-                                () -> -driver.getLeftX() * 0.5,
-                                () -> -driver.getRightX() * 0.5,
-                                () -> 0.05));
+                                () -> -driver.getLeftY() * OperatorConstants.precisionMode,
+                                () -> -driver.getLeftX() * OperatorConstants.precisionMode,
+                                () -> -driver.getRightX() * OperatorConstants.precisionMode,
+                                () -> OperatorConstants.deadband));
 
         // Lock to 0° when A button is held
         driver
@@ -211,7 +237,7 @@ public class RobotContainer {
                                 () -> -driver.getLeftY(),
                                 () -> -driver.getLeftX(),
                                 () -> new Rotation2d(),
-                                () -> 0.1));
+                                () -> OperatorConstants.deadband));
 
         // Switch to X pattern when X button is pressed
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -226,29 +252,26 @@ public class RobotContainer {
                                 drive)
                                 .ignoringDisable(true));
 
-        driver
-                .leftTrigger()
-                .onTrue(
-                        outtake
-                                .setVoltage(() -> -2)
-                                .until(() -> (outtake.getDetected())).unless(() -> !elevator.intaking()))
-                .onFalse(outtake.setVoltage(() -> 0).andThen(elevator.setTarget(() -> 0.057))); // TODO: added idle at intake position, test
+        driver.leftTrigger().onTrue(Commands.select(outtakeCommands, elevator::getSetpoint));
 
         driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 
-        operator.y().onTrue(elevator.setTarget(() -> 1.76));
-        operator.x().onTrue(elevator.setTarget(() -> 1.05));
-        operator.b().onTrue(elevator.setTarget(() -> 0.63));
-        operator.a().onTrue(elevator.setTarget(() -> 0.33));
-        operator.povDown().onTrue(elevator.setTarget(() -> 0));
-        operator.povUp().onTrue(elevator.setTarget(() -> 0.057));
+        operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
+        operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
+        operator.b().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L2));
+        operator.a().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L1));
+        operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
+        operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
 
         operator.leftTrigger().onTrue(elevator.homingSequence());
 
         operator
                 .rightTrigger()
-                .whileTrue(elevator.setVoltage(() -> 12.0 * Math.pow(MathUtil.applyDeadband(operator.getLeftY(), 0.05), 2)))
-                .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home on left, test and get Connor's feedback on input squaring
+                .whileTrue(
+                        elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(operator.getLeftY(), 0.05)))
+                .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home
+        // on left, test and get Connor's feedback on
+        // input squaring
     }
 
     /**

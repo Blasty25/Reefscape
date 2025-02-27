@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.vision.VisionConstants;
 import java.io.File;
 import java.io.IOException;
@@ -102,10 +102,10 @@ public class Robot extends LoggedRobot {
     // Check for valid swerve config
     var modules =
         new SwerveModuleConstants[] {
-          DriveConstants.FrontLeft,
-          DriveConstants.FrontRight,
-          DriveConstants.BackLeft,
-          DriveConstants.BackRight
+          TunerConstants.FrontLeft,
+          TunerConstants.FrontRight,
+          TunerConstants.BackLeft,
+          TunerConstants.BackRight
         };
     for (var constants : modules) {
       if (constants.DriveMotorType != DriveMotorArrangement.TalonFX_Integrated

@@ -97,9 +97,9 @@ public class ModuleIOTalonFX implements ModuleIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     this.constants = constants;
-    driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.DrivetrainConstants.CANBusName);
-    turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.DrivetrainConstants.CANBusName);
-    cancoder = new CANcoder(constants.EncoderId, DriveConstants.DrivetrainConstants.CANBusName);
+    driveTalon = new TalonFX(constants.DriveMotorId, TunerConstants.DrivetrainConstants.CANBusName);
+    turnTalon = new TalonFX(constants.SteerMotorId, TunerConstants.DrivetrainConstants.CANBusName);
+    cancoder = new CANcoder(constants.EncoderId, TunerConstants.DrivetrainConstants.CANBusName);
 
     // Configure drive motor
     var driveConfig = constants.DriveMotorInitialConfigs;
@@ -231,9 +231,10 @@ public class ModuleIOTalonFX implements ModuleIO {
   public void setDriveOpenLoop(double output) {
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(
-              output / DriveConstants.kSpeedAt12Volts.magnitude() * 12.0);
-            //   voltageRequest.withOutput(output);
+          case Voltage -> // voltageRequest.withOutput(output /
+          // DriveConstants.kSpeedAt12Volts.magnitude() * 12.0);
+          voltageRequest.withOutput(
+              output); // TODO: changed to velocity control, make sure it works
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
         });
   }

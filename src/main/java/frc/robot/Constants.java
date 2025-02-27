@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -40,31 +39,6 @@ public final class Constants {
   }
 
   public static class RobotMap {
-    public static class Drive {
-      public static final int pigeon = 0;
-
-      public static final int frontLeftDrive = 1;
-      public static final int frontLeftTurn = 2;
-      public static final int frontLeftEncoder = 0;
-
-      public static final int frontRightDrive = 3;
-      public static final int frontRightTurn = 4;
-      public static final int frontRightEncoder = 1;
-
-      public static final int backLeftDrive = 5;
-      public static final int backLeftTurn = 6;
-      public static final int backLeftEncoder = 2;
-
-      public static final int backRightDrive = 7;
-      public static final int backRightTurn = 8;
-      public static final int backRightEncoder = 3;
-
-      public static final Rotation2d frontLeftOffset = new Rotation2d(0.0);
-      public static final Rotation2d frontRightOffset = new Rotation2d(0.0);
-      public static final Rotation2d backLeftOffset = new Rotation2d(0.0);
-      public static final Rotation2d backRightOffset = new Rotation2d(0.0);
-    }
-
     public static class Elevator {
       public static final int left = 10;
       public static final int right = 11;
@@ -74,5 +48,10 @@ public final class Constants {
       public static final int motor = 20;
       public static final int canandcolor = 21;
     }
+  }
+
+  public static final class OperatorConstants {
+    public static final double deadband = 0.075;
+    public static final double precisionMode = 0.5;
   }
 }
