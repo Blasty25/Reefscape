@@ -110,6 +110,16 @@ public class Elevator extends SubsystemBase {
 
   public boolean hasZeroed = false;
 
+  public enum ElevatorSetpoints {
+    ZERO,
+    INTAKE,
+    L1,
+    L2,
+    DEALGAE2,
+    L3,
+    L4
+  }
+
   public Elevator(ElevatorIO io) {
     this.io = io;
 
@@ -266,6 +276,55 @@ public class Elevator extends SubsystemBase {
     } else {
       return 0;
     }
+  }
+
+  @AutoLogOutput(key = "Elevator/Setpoint")
+  public ElevatorSetpoints getSetpoint() {
+    if (inputs.targetPositionMeters == 0.0) {
+      return ElevatorSetpoints.ZERO;
+    } else if (inputs.targetPositionMeters == 0.057) {
+      return ElevatorSetpoints.INTAKE;
+    } else if (inputs.targetPositionMeters == 0.33) {
+      return ElevatorSetpoints.L1;
+    } else if (inputs.targetPositionMeters == 0.63) {
+      return ElevatorSetpoints.L2;
+    } else if (inputs.targetPositionMeters == 0.83) {
+      return ElevatorSetpoints.DEALGAE2;
+    } else if (inputs.targetPositionMeters == 1.05) {
+      return ElevatorSetpoints.L3;
+    } else if (inputs.targetPositionMeters == 1.76) {
+      return ElevatorSetpoints.L4;
+    } else {
+      throw new IllegalArgumentException("Unknown meter value: " + inputs.targetPositionMeters);
+    }
+  }
+
+  public double getSetpointMeters(ElevatorSetpoints setpoint) {
+    switch (setpoint) {
+      case ZERO:
+        return 0.0;
+      case INTAKE:
+        return 0.057;
+      case L1:
+        return 0.33;
+      case L2:
+        return 0.63;
+      case DEALGAE2:
+        return 0.83;
+      case L3:
+        return 1.05;
+      case L4:
+        return 1.76;
+      default:
+        throw new IllegalArgumentException("Unknown setpoint: " + setpoint);
+    }
+  }
+
+  public Command setSetpoint(Supplier<ElevatorSetpoints> setpoint) {
+    return this.run(
+        () -> {
+          setTarget(getSetpointMeters(setpoint.get()));
+        });
   }
 
   public Command staticCharacterization(double outputRampRate) {
