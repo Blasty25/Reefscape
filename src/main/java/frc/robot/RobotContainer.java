@@ -120,25 +120,21 @@ public class RobotContainer {
         break;
     }
 
-    outtakeCommands =
-        new EnumMap<ElevatorSetpoint, Command>(
-            Map.ofEntries(
-                Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
-                Map.entry(
-                    ElevatorSetpoint.INTAKE,
-                    Commands.parallel(
-                        outtake
-                            .setVoltage(() -> -2)
-                            .until(() -> outtake.getDetected())
-                            .andThen(outtake.setVoltage(() -> 0)))),
-                Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
-                Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
-                Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
-                Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
-                Map.entry(
-                    ElevatorSetpoint.L4,
-                    DriveCommands.driveForTime(drive, -1, 0, 0.1)
-                        .andThen(outtake.setVoltage(() -> -2)))));
+    // outtakeCommands =
+    //     new EnumMap<ElevatorSetpoint, Command>(
+    //         Map.ofEntries(
+    //             Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
+    //             Map.entry(
+    //                 ElevatorSetpoint.INTAKE,
+    //                 outtake
+    //                     .setVoltage(() -> -2)
+    //                     .until(() -> outtake.getDetected())
+    //                     .andThen(outtake.setVoltage(() -> 0))),
+    //             Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
+    //             Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
+    //             Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
+    //             Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
+    //             Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
 
     autoFactory =
         new AutoFactory(
@@ -253,7 +249,7 @@ public class RobotContainer {
     operator
         .rightTrigger()
         .whileTrue(
-            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(operator.getLeftY(), 0.05)))
+            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getLeftY(), 0.05)))
         .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home
     // on left, test and get Connor's feedback on
     // input squaring

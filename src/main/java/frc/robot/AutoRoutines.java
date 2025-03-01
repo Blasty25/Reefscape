@@ -33,7 +33,7 @@ public class AutoRoutines {
         .onTrue(
             Commands.parallel(
                 elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                Commands.waitSeconds(2).andThen(outtake.setVoltage(() -> -2))));
+                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
 
     return routine;
   }
@@ -50,7 +50,7 @@ public class AutoRoutines {
         .onTrue(
             Commands.parallel(
                 elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -2))));
+                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
 
     return routine;
   }
