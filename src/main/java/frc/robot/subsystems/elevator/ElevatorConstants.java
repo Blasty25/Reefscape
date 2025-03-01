@@ -36,7 +36,7 @@ public class ElevatorConstants {
   public static final double maxAcceleration = // 0.3;
       2.6 / 0.4;
 
-  public static final double homingVolts = -2.0;
+  public static final double homingVolts = -4.0;
   public static final double homingTimeSecs = 0.2;
   public static final double homingVelocityThresh = 0.2;
 

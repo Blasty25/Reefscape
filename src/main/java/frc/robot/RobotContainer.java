@@ -44,8 +44,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -69,7 +67,7 @@ public class RobotContainer {
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
+  // private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -121,20 +119,20 @@ public class RobotContainer {
     }
 
     // outtakeCommands =
-    //     new EnumMap<ElevatorSetpoint, Command>(
-    //         Map.ofEntries(
-    //             Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
-    //             Map.entry(
-    //                 ElevatorSetpoint.INTAKE,
-    //                 outtake
-    //                     .setVoltage(() -> -2)
-    //                     .until(() -> outtake.getDetected())
-    //                     .andThen(outtake.setVoltage(() -> 0))),
-    //             Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
-    //             Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
-    //             Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
-    //             Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
-    //             Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
+    // new EnumMap<ElevatorSetpoint, Command>(
+    // Map.ofEntries(
+    // Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
+    // Map.entry(
+    // ElevatorSetpoint.INTAKE,
+    // outtake
+    // .setVoltage(() -> -2)
+    // .until(() -> outtake.getDetected())
+    // .andThen(outtake.setVoltage(() -> 0))),
+    // Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
+    // Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
+    // Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
+    // Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
+    // Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
 
     autoFactory =
         new AutoFactory(
@@ -233,7 +231,15 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    driver.leftTrigger().onTrue(Commands.select(outtakeCommands, elevator::getSetpoint));
+    // driver.leftTrigger().onTrue(Commands.select(outtakeCommands,
+    // elevator::getSetpoint));
+    driver
+        .leftTrigger()
+        .onTrue(
+            outtake
+                .setVoltage(() -> -2)
+                .until(() -> (outtake.getDetected() && elevator.intaking()))
+                .andThen(() -> outtake.setVoltage(() -> 0)));
 
     driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 
@@ -244,12 +250,15 @@ public class RobotContainer {
     operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
     operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
 
-    operator.leftTrigger().onTrue(elevator.homingSequence());
+    operator
+        .leftTrigger()
+        .onTrue(
+            elevator.homingSequence().andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)));
 
     operator
         .rightTrigger()
         .whileTrue(
-            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getLeftY(), 0.05)))
+            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
         .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home
     // on left, test and get Connor's feedback on
     // input squaring

@@ -262,7 +262,8 @@ public class Elevator extends SubsystemBase {
 
   @AutoLogOutput(key = "Elevator/Intaking")
   public boolean intaking() {
-    return (inputs.targetPositionMeters == 0.057) || (inputs.positionMeters < 0.2);
+    return ((inputs.setpoint == ElevatorSetpoint.INTAKE)
+        && (Math.abs(inputs.positionMeters - elevatorHeights.get(ElevatorSetpoint.INTAKE)) < 0.2));
   }
 
   public int getStages() {
