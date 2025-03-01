@@ -21,28 +21,43 @@ public class AutoRoutines {
     this.outtake = outtake;
   }
 
-  public AutoRoutine centerToG4Auto() {
-    AutoRoutine routine = autoFactory.newRoutine("centerToG4");
+  public AutoRoutine centerToDR4Auto() {
+    AutoRoutine routine = autoFactory.newRoutine("centerToDR4");
 
-    AutoTrajectory centerToG = routine.trajectory("centerToG");
+    AutoTrajectory centerToDR = routine.trajectory("centerToDR");
 
-    routine.active().onTrue(Commands.sequence(centerToG.resetOdometry(), centerToG.cmd()));
+    routine.active().onTrue(Commands.sequence(centerToDR.resetOdometry(), centerToDR.cmd()));
 
-    centerToG.atTime(0.5).whileTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
-    centerToG.done().onTrue(outtake.setVoltage(() -> -2));
+    centerToDR
+        .atTime(0.3)
+        .onTrue(
+            Commands.parallel(
+                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                Commands.waitSeconds(2).andThen(outtake.setVoltage(() -> -2))));
 
     return routine;
   }
 
-  public AutoRoutine centerToH4Auto() {
-    AutoRoutine routine = autoFactory.newRoutine("centerToH4");
+  public AutoRoutine centerToDL4Auto() {
+    AutoRoutine routine = autoFactory.newRoutine("centerToDL4");
 
-    AutoTrajectory centerToH = routine.trajectory("mirrored_centerToG");
+    AutoTrajectory centerToDL = routine.trajectory("mirrored_centerToDR");
 
-    routine.active().onTrue(Commands.sequence(centerToH.resetOdometry(), centerToH.cmd()));
+    routine.active().onTrue(Commands.sequence(centerToDL.resetOdometry(), centerToDL.cmd()));
 
-    centerToH.atTime(0.5).whileTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
-    centerToH.done().onTrue(outtake.setVoltage(() -> -2));
+    centerToDL
+        .atTime(0.3)
+        .onTrue(
+            Commands.parallel(
+                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -2))));
+
+    return routine;
+  }
+
+  public AutoRoutine spitAuto() {
+    AutoRoutine routine = autoFactory.newRoutine("spit");
+    routine.active().onTrue(outtake.setVoltage(() -> -2));
 
     return routine;
   }

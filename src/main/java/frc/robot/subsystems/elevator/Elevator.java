@@ -164,13 +164,13 @@ public class Elevator extends SubsystemBase {
               switch (getStages()) {
                 case 0 -> ffVolts =
                     ff0.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
                 case 1 -> ffVolts =
                     ff1.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
                 default -> ffVolts =
                     ff2.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
               };
           double pidVolts = pid.calculate(inputs.positionMeters, meters);
 
@@ -230,7 +230,7 @@ public class Elevator extends SubsystemBase {
               io.setVoltage(homingVolts.get());
               homed =
                   homingDebouncer.calculate(
-                      Math.abs(inputs.velocityMetersPerSecond) <= homingVelocityThresh.get());
+                      Math.abs(inputs.motorVelocityMetersPerSecond) <= homingVelocityThresh.get());
             })
         .until(() -> homed)
         .andThen(
@@ -250,6 +250,14 @@ public class Elevator extends SubsystemBase {
 
   public ElevatorSetpoint getSetpoint() {
     return inputs.setpoint;
+  }
+
+  public double getVelocity() {
+    return inputs.motorVelocityMetersPerSecond;
+  }
+
+  public boolean isAtGoal() {
+    return atGoal;
   }
 
   @AutoLogOutput(key = "Elevator/Intaking")
@@ -281,7 +289,8 @@ public class Elevator extends SubsystemBase {
               Logger.recordOutput(
                   "Elevator/StaticCharacterizationOutput", state.characterizationOutput);
             })
-        .until(() -> inputs.velocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
+        .until(
+            () -> inputs.motorVelocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
         .finallyDo(
             () -> {
               timer.stop();

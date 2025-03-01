@@ -38,6 +38,7 @@ import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
+import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -100,7 +101,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSpark());
+        outtake = new Outtake(new OuttakeIOSim());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
 
@@ -160,8 +161,9 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
 
-    autoChooser.addOption("Center to G4", autoRoutines.centerToG4Auto().cmd());
-    autoChooser.addOption("Center to H4", autoRoutines.centerToH4Auto().cmd());
+    autoChooser.addOption("Center to DR4", autoRoutines.centerToDR4Auto().cmd());
+    autoChooser.addOption("Center to DL4", autoRoutines.centerToDL4Auto().cmd());
+    autoChooser.addOption("Spit", autoRoutines.spitAuto().cmd());
 
     // Set up SysId routines
     autoChooser.addOption(
