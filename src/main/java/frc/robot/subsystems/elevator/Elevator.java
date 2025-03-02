@@ -277,6 +277,13 @@ public class Elevator extends SubsystemBase {
     }
   }
 
+  public Command reset() {
+    return this.run(
+        () -> {
+          inputs.setpoint = ElevatorSetpoint.ZERO;
+        });
+  }
+
   public Command staticCharacterization(double outputRampRate) {
     final StaticCharacterizationState state = new StaticCharacterizationState();
     Timer timer = new Timer();

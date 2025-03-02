@@ -155,9 +155,10 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
 
-    autoChooser.addOption("Center to DR4", autoRoutines.centerToDR4Auto().cmd());
-    autoChooser.addOption("Center to DL4", autoRoutines.centerToDL4Auto().cmd());
+    autoChooser.addOption("Center-DR4", autoRoutines.centerToDR4Auto().cmd());
+    autoChooser.addOption("Center-DL4", autoRoutines.centerToDL4Auto().cmd());
     autoChooser.addOption("Spit", autoRoutines.spitAuto().cmd());
+    autoChooser.addOption("Center-DR4-FL4", autoRoutines.centerToDR4toFL4Auto().cmd());
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -233,6 +234,8 @@ public class RobotContainer {
 
     // driver.leftTrigger().onTrue(Commands.select(outtakeCommands,
     // elevator::getSetpoint));
+    outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
+
     driver
         .leftTrigger()
         .onTrue(

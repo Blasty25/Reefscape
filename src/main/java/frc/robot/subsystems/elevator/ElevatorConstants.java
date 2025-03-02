@@ -21,8 +21,8 @@ public class ElevatorConstants {
   public static final int current = 70;
 
   public static class Gains {
-    public static final double[] kS = {2.1, 2.1, 2.6};
-    public static final double[] kG = {0.35, 0.35, 0.35};
+    public static final double[] kS = {0.6, 0.6, 0.9};
+    public static final double[] kG = {0.3, 0.3, 0.3};
     public static final double kV = 3;
     public static final double[] kA = {0.0, 0.0, 0.0};
 
@@ -32,7 +32,7 @@ public class ElevatorConstants {
   }
 
   public static final double maxVelocity = // 0.3;
-      2.7;
+      1.8;
   public static final double maxAcceleration = // 0.3;
       2.6 / 0.4;
 
