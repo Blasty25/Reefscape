@@ -25,8 +25,8 @@ public class AutoRoutines {
     AutoRoutine routine = autoFactory.newRoutine("centerDR4FL4");
 
     AutoTrajectory centerToDR = routine.trajectory("centerToDR");
-    // AutoTrajectory DRToDEF = routine.trajectory("DRToDEF");
-    // AutoTrajectory DEFToFL = routine.trajectory("DEFToFL");
+    AutoTrajectory DRToDEF = routine.trajectory("DRToDEF");
+    AutoTrajectory DEFToFL = routine.trajectory("DEFToFL");
 
     routine.active().onTrue(Commands.sequence(centerToDR.resetOdometry(), centerToDR.cmd()));
 
@@ -34,30 +34,31 @@ public class AutoRoutines {
         .atTime(0.3)
         .onTrue(
             Commands.deadline(
+                    Commands.waitSeconds(4),
+                    elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                    Commands.waitSeconds(2)
+                        .andThen(outtake.setVoltage(() -> -2).andThen(Commands.waitSeconds(2))))
+                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
+    centerToDR.done().onTrue(Commands.waitSeconds(4).andThen(DRToDEF.cmd()));
+
+    DRToDEF.done()
+        .onTrue(
+            Commands.deadline(
+                    Commands.waitSeconds(4),
+                    outtake
+                        .setVoltage(() -> -2)
+                        .until(() -> outtake.getDetected())
+                        .andThen(outtake.setVoltage(() -> 0)))
+                .andThen(DEFToFL.cmd()));
+
+    DEFToFL.done()
+        .onTrue(
+            Commands.deadline(
                     Commands.waitSeconds(6),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
                     Commands.waitSeconds(4)
                         .andThen(outtake.setVoltage(() -> -2).andThen(Commands.waitSeconds(2))))
-                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)))
-    // .andThen(DRToDEF.cmd()))
-    ;
-
-    // DRToDEF.done()
-    //     .onTrue(
-    //         outtake
-    //             .setVoltage(() -> -2)
-    //             .until(() -> outtake.getDetected())
-    //             .andThen(outtake.setVoltage(() -> 0))
-    //             .andThen(DEFToFL.cmd()));
-
-    // DEFToFL.atTime(0.3)
-    //     .onTrue(
-    //         Commands.deadline(
-    //                 Commands.waitSeconds(6),
-    //                 elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-    //                 Commands.waitSeconds(4)
-    //                     .andThen(outtake.setVoltage(() -> -2).andThen(Commands.waitSeconds(2))))
-    //             .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)));
+                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)));
     return routine;
   }
 
@@ -91,6 +92,70 @@ public class AutoRoutines {
             Commands.parallel(
                 elevator.setSetpoint(() -> ElevatorSetpoint.L4),
                 Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
+
+    return routine;
+  }
+
+  public AutoRoutine blueXToER4Auto() {
+    AutoRoutine routine = autoFactory.newRoutine("blueXToER4");
+
+    AutoTrajectory blueXToER = routine.trajectory("blueXToER");
+
+    routine.active().onTrue(Commands.sequence(blueXToER.resetOdometry(), blueXToER.cmd()));
+
+    blueXToER
+        .atTime(0.3)
+        .onTrue(
+            Commands.parallel(
+                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
+
+    return routine;
+  }
+
+  public AutoRoutine redXToCL4Auto() {
+    AutoRoutine routine = autoFactory.newRoutine("redXToCL4");
+
+    AutoTrajectory redXToCL = routine.trajectory("mirrored_blueXToER");
+
+    routine.active().onTrue(Commands.sequence(redXToCL.resetOdometry(), redXToCL.cmd()));
+
+    redXToCL
+        .atTime(0.3)
+        .onTrue(
+            Commands.parallel(
+                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
+
+    return routine;
+  }
+
+  public AutoRoutine centerDriveAuto() {
+    AutoRoutine routine = autoFactory.newRoutine("centerDrive");
+
+    AutoTrajectory drive = routine.trajectory("centerDrive");
+
+    routine.active().onTrue(Commands.sequence(drive.resetOdometry(), drive.cmd()));
+
+    return routine;
+  }
+
+  public AutoRoutine blueXDriveAuto() {
+    AutoRoutine routine = autoFactory.newRoutine("blueXDrive");
+
+    AutoTrajectory blueXDrive = routine.trajectory("blueXDrive");
+
+    routine.active().onTrue(Commands.sequence(blueXDrive.resetOdometry(), blueXDrive.cmd()));
+
+    return routine;
+  }
+
+  public AutoRoutine redXDriveAuto() {
+    AutoRoutine routine = autoFactory.newRoutine("redXDrive");
+
+    AutoTrajectory redXDrive = routine.trajectory("mirrored_blueXDrive");
+
+    routine.active().onTrue(Commands.sequence(redXDrive.resetOdometry(), redXDrive.cmd()));
 
     return routine;
   }
