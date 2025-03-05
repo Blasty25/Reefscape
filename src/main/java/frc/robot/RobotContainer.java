@@ -157,6 +157,8 @@ public class RobotContainer {
 
     autoChooser.addOption("Center-DR4", autoRoutines.centerToDR4Auto().cmd());
     autoChooser.addOption("Center-DL4", autoRoutines.centerToDL4Auto().cmd());
+    autoChooser.addOption("Blue-ER4", autoRoutines.blueXToER4Auto().cmd());
+    autoChooser.addOption("Red-CL4", autoRoutines.redXToCL4Auto().cmd());
     autoChooser.addOption("Spit", autoRoutines.spitAuto().cmd());
     autoChooser.addOption("Center-DR4-FL4", autoRoutines.centerToDR4toFL4Auto().cmd());
 
