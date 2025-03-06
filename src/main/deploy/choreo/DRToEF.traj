@@ -1,5 +1,5 @@
 {
- "name":"DRToDEF",
+ "name":"DRToEF",
  "version":1,
  "snapshot":{
   "waypoints":[
@@ -16,7 +16,7 @@
   "waypoints":[
     {"x":{"exp":"DR.x", "val":11.552756309509276}, "y":{"exp":"DR.y", "val":4.193204879760742}, "heading":{"exp":"DR.heading", "val":0.0}, "intervals":29, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"11.922473907470703 m", "val":11.922473907470703}, "y":{"exp":"6.336320877075195 m", "val":6.336320877075195}, "heading":{"exp":"-1.012196546240282 rad", "val":-1.012196546240282}, "intervals":39, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"DEF.x", "val":16.384204864501953}, "y":{"exp":"DEF.y", "val":7.090511798858643}, "heading":{"exp":"DEF.heading", "val":-2.199114857512855}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"EF.x", "val":16.384204864501953}, "y":{"exp":"EF.y", "val":7.090511798858643}, "heading":{"exp":"EF.heading", "val":-2.199114857512855}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":false},
     {"from":0, "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":false},

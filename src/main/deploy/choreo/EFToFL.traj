@@ -1,5 +1,5 @@
 {
- "name":"DEFToFL",
+ "name":"EFToFL",
  "version":1,
  "snapshot":{
   "waypoints":[
@@ -13,7 +13,7 @@
  },
  "params":{
   "waypoints":[
-    {"x":{"exp":"DEF.x", "val":16.384204864501953}, "y":{"exp":"DEF.y", "val":7.090511798858643}, "heading":{"exp":"DEF.heading", "val":-2.199114857512855}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"EF.x", "val":16.384204864501953}, "y":{"exp":"EF.y", "val":7.090511798858643}, "heading":{"exp":"EF.heading", "val":-2.199114857512855}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"FL.x", "val":13.952085494995115}, "y":{"exp":"FL.y", "val":5.205086708068848}, "heading":{"exp":"FL.heading", "val":-2.106604942319411}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
