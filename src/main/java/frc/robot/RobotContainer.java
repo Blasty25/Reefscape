@@ -269,7 +269,7 @@ public class RobotContainer {
     operator
         .leftTrigger()
         .onTrue(
-            elevator.homingSequence().andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)));
+            elevator.homingSequence().andThen(elevator.reset()));
 
     operator
         .rightTrigger()
