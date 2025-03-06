@@ -18,7 +18,7 @@ public class ElevatorConstants {
   public static final double positionConversionFactor = drumRadius * 2 * Math.PI / gearing;
   public static final double tolerance = .005;
 
-  public static final int current = 70;
+  public static final int current = 60;
 
   public static class Gains {
     public static final double[] kS = {0.6, 0.6, 0.9};

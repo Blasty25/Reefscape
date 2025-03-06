@@ -36,6 +36,10 @@ import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.hopper.HopperIOSpark;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
@@ -57,6 +61,7 @@ public class RobotContainer {
   // Subsystems
   public final Drive drive;
   public final Elevator elevator;
+  public final Hopper hopper;
   public final Outtake outtake;
   public final Vision vision;
 
@@ -82,6 +87,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
+        hopper = new Hopper(new HopperIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
         vision =
             new Vision(
@@ -99,6 +105,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
+        hopper = new Hopper(new HopperIOSim());
         outtake = new Outtake(new OuttakeIOSim());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
@@ -113,6 +120,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
+        hopper = new Hopper(new HopperIO() {});
         outtake = new Outtake(new OuttakeIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
@@ -237,14 +245,17 @@ public class RobotContainer {
     // driver.leftTrigger().onTrue(Commands.select(outtakeCommands,
     // elevator::getSetpoint));
     outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
+    hopper.setDefaultCommand(hopper.setVoltage(() -> 0));
 
     driver
         .leftTrigger()
         .onTrue(
-            outtake
-                .setVoltage(() -> -2)
+            Commands.parallel(outtake.setVoltage(() -> -2), hopper.setVoltage(() -> -6))
                 .until(() -> (outtake.getDetected() && elevator.intaking()))
-                .andThen(() -> outtake.setVoltage(() -> 0)));
+                .andThen(
+                    () ->
+                        Commands.parallel(
+                            outtake.setVoltage(() -> 0), hopper.setVoltage(() -> 0))));
 
     driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 

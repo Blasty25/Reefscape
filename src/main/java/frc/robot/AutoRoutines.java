@@ -120,12 +120,12 @@ public class AutoRoutines {
 
     routine.active().onTrue(Commands.sequence(redXToCL.resetOdometry(), redXToCL.cmd()));
 
-    // redXToCL
-    //     .atTime(0.3)
-    //     .onTrue(
-    //         Commands.parallel(
-    //             elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-    //             Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
+    redXToCL
+        .atTime(0.3)
+        .onTrue(
+            Commands.parallel(
+                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
 
     return routine;
   }
