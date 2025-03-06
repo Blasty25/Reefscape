@@ -250,7 +250,7 @@ public class RobotContainer {
     driver
         .leftTrigger()
         .onTrue(
-            Commands.parallel(outtake.setVoltage(() -> -2), hopper.setVoltage(() -> -6))
+            Commands.parallel(outtake.setVoltage(() -> -2), hopper.setVoltage(() -> -10))
                 .until(() -> (outtake.getDetected() && elevator.intaking()))
                 .andThen(
                     () ->
