@@ -140,10 +140,13 @@ public class AutoRoutines {
             Commands.deadline(
                     Commands.waitSeconds(6),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(4).andThen(outtake.setVoltage(() -> -4)))
+                    Commands.waitSeconds(4).andThen(outtake.setVoltage(() -> -2)))
                 .andThen(
-                    Commands.parallel(
-                        elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE), CLToredX.cmd())));
+                    // Commands.parallel(
+                    elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE))
+            // , CLToredX.cmd()))
+
+            );
 
     return routine;
   }
