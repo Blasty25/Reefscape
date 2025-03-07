@@ -162,7 +162,7 @@ public class RobotContainer {
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
-
+    autoChooser.addOption("Center-Reset", autoRoutines.centerResetAuto().cmd());
     autoChooser.addOption("Center-DR4", autoRoutines.centerToDR4Auto().cmd());
     autoChooser.addOption("Center-DL4", autoRoutines.centerToDL4Auto().cmd());
     autoChooser.addOption("Blue-ER4", autoRoutines.blueXToER4Auto().cmd());
@@ -206,16 +206,18 @@ public class RobotContainer {
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
-            () -> OperatorConstants.deadband));
+            () -> OperatorConstants.deadband,
+            () -> 1));
     driver
         .leftBumper()
         .whileTrue(
             DriveCommands.joystickDrive(
                 drive,
-                () -> -driver.getLeftY() * OperatorConstants.precisionMode,
-                () -> -driver.getLeftX() * OperatorConstants.precisionMode,
-                () -> -driver.getRightX() * OperatorConstants.precisionMode,
-                () -> OperatorConstants.deadband));
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                () -> OperatorConstants.deadband,
+                () -> OperatorConstants.precisionMode));
 
     // Lock to 0° when A button is held
     driver
@@ -257,7 +259,10 @@ public class RobotContainer {
                         Commands.parallel(
                             outtake.setVoltage(() -> 0), hopper.setVoltage(() -> 0))));
 
-    driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
+    driver
+        .rightTrigger()
+        .onTrue(Commands.parallel(outtake.setVoltage(() -> 12), hopper.setVoltage(() -> 3)))
+        .onFalse(Commands.parallel(outtake.setVoltage(() -> 0), hopper.setVoltage(() -> 0)));
 
     operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
     operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
@@ -266,10 +271,7 @@ public class RobotContainer {
     operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
     operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
 
-    operator
-        .leftTrigger()
-        .onTrue(
-            elevator.homingSequence().andThen(elevator.reset()));
+    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
     operator
         .rightTrigger()
