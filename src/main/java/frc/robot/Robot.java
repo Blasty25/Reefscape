@@ -47,7 +47,7 @@ public class Robot extends LoggedRobot {
 
   private static final boolean IS_PRACTICE = !DriverStation.isFMSAttached();
   ;
-  private static final String LOG_DIRECTORY = "/home/lvuser/logs";
+  private static final String LOG_DIRECTORY = "/media/sda";
   private static final long MIN_FREE_SPACE =
       IS_PRACTICE
           ? 100000000
