@@ -82,7 +82,7 @@ public class AutoRoutines {
             Commands.deadline(
                     Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -2)))
                 .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
 
     return routine;
