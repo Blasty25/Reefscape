@@ -34,10 +34,9 @@ public class AutoRoutines {
         .atTime(0.3)
         .onTrue(
             Commands.deadline(
-                    Commands.waitSeconds(4),
+                    Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(2)
-                        .andThen(outtake.setVoltage(() -> -2).andThen(Commands.waitSeconds(2))))
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
                 .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
     centerToDR.done().onTrue(Commands.waitSeconds(4).andThen(DRToDEF.cmd()));
 
@@ -54,11 +53,10 @@ public class AutoRoutines {
     DEFToFL.done()
         .onTrue(
             Commands.deadline(
-                    Commands.waitSeconds(6),
+                    Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(4)
-                        .andThen(outtake.setVoltage(() -> -2).andThen(Commands.waitSeconds(2))))
-                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO)));
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
+                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
     return routine;
   }
 
@@ -82,9 +80,9 @@ public class AutoRoutines {
         .atTime(0.3)
         .onTrue(
             Commands.deadline(
-                    Commands.waitSeconds(6),
+                    Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(4).andThen(outtake.setVoltage(() -> -4)))
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
                 .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
 
     return routine;
@@ -100,9 +98,11 @@ public class AutoRoutines {
     centerToDL
         .atTime(0.3)
         .onTrue(
-            Commands.parallel(
-                elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                Commands.waitSeconds(6).andThen(outtake.setVoltage(() -> -2))));
+            Commands.deadline(
+                    Commands.waitSeconds(5),
+                    elevator.setSetpoint(() -> ElevatorSetpoint.L4),
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
+                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
 
     return routine;
   }
@@ -118,9 +118,9 @@ public class AutoRoutines {
         .atTime(0.3)
         .onTrue(
             Commands.deadline(
-                    Commands.waitSeconds(6),
+                    Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(4).andThen(outtake.setVoltage(() -> -4)))
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
                 .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
 
     return routine;
@@ -138,15 +138,10 @@ public class AutoRoutines {
         .atTime(0.3)
         .onTrue(
             Commands.deadline(
-                    Commands.waitSeconds(6),
+                    Commands.waitSeconds(5),
                     elevator.setSetpoint(() -> ElevatorSetpoint.L4),
-                    Commands.waitSeconds(4).andThen(outtake.setVoltage(() -> -2)))
-                .andThen(
-                    // Commands.parallel(
-                    elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE))
-            // , CLToredX.cmd()))
-
-            );
+                    Commands.waitSeconds(3).andThen(outtake.setVoltage(() -> -4)))
+                .andThen(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE)));
 
     return routine;
   }
