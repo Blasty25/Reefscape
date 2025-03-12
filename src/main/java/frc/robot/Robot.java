@@ -47,7 +47,7 @@ public class Robot extends LoggedRobot {
 
   private static final boolean IS_PRACTICE = !DriverStation.isFMSAttached();
   ;
-  private static final String LOG_DIRECTORY = "/home/lvuser/logs";
+  private static final String LOG_DIRECTORY = "/media/sda";
   private static final long MIN_FREE_SPACE =
       IS_PRACTICE
           ? 100000000
@@ -118,6 +118,7 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+    // CameraServer.startAutomaticCapture();
   }
 
   /** This function is called periodically during all modes. */

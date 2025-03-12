@@ -38,15 +38,18 @@ import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.hopper.HopperIOSpark;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
+import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -60,6 +63,7 @@ public class RobotContainer {
   // Subsystems
   public final Drive drive;
   public final Elevator elevator;
+  public final Hopper hopper;
   public final Outtake outtake;
   public final Vision vision;
 
@@ -70,7 +74,7 @@ public class RobotContainer {
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
+  // private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -85,6 +89,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
+        hopper = new Hopper(new HopperIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
         vision =
             new Vision(
@@ -102,7 +107,8 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSpark());
+        hopper = new Hopper(new HopperIOSim());
+        outtake = new Outtake(new OuttakeIOSim());
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
 
@@ -116,30 +122,27 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
+        hopper = new Hopper(new HopperIO() {});
         outtake = new Outtake(new OuttakeIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
 
-    outtakeCommands =
-        new EnumMap<ElevatorSetpoint, Command>(
-            Map.ofEntries(
-                Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
-                Map.entry(
-                    ElevatorSetpoint.INTAKE,
-                    Commands.parallel(
-                        outtake
-                            .setVoltage(() -> -2)
-                            .until(() -> outtake.getDetected())
-                            .andThen(outtake.setVoltage(() -> 0)))),
-                Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
-                Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
-                Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
-                Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
-                Map.entry(
-                    ElevatorSetpoint.L4,
-                    DriveCommands.driveForTime(drive, -1, 0, 0.1)
-                        .andThen(outtake.setVoltage(() -> -2)))));
+    // outtakeCommands =
+    // new EnumMap<ElevatorSetpoint, Command>(
+    // Map.ofEntries(
+    // Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
+    // Map.entry(
+    // ElevatorSetpoint.INTAKE,
+    // outtake
+    // .setVoltage(() -> -2)
+    // .until(() -> outtake.getDetected())
+    // .andThen(outtake.setVoltage(() -> 0))),
+    // Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
+    // Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
+    // Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
+    // Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
+    // Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
 
     autoFactory =
         new AutoFactory(
@@ -161,9 +164,13 @@ public class RobotContainer {
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
-
-    autoChooser.addOption("Center to G4", autoRoutines.centerToG4Auto().cmd());
-    autoChooser.addOption("Center to H4", autoRoutines.centerToH4Auto().cmd());
+    autoChooser.addOption("Center-Reset", autoRoutines.centerResetAuto().cmd());
+    autoChooser.addOption("Center-DR4", autoRoutines.centerToDR4Auto().cmd());
+    autoChooser.addOption("Center-DL4", autoRoutines.centerToDL4Auto().cmd());
+    autoChooser.addOption("Blue-ER4", autoRoutines.blueXToER4Auto().cmd());
+    autoChooser.addOption("Red-CL4", autoRoutines.redXToCL4Auto().cmd());
+    autoChooser.addOption("Spit", autoRoutines.spitAuto().cmd());
+    autoChooser.addOption("Center-DR4-FL4", autoRoutines.centerToDR4toFL4Auto().cmd());
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -201,16 +208,18 @@ public class RobotContainer {
             () -> driver.getLeftY(),
             () -> driver.getLeftX(),
             () -> -driver.getRightX(),
-            () -> OperatorConstants.deadband));
+            () -> OperatorConstants.deadband,
+            () -> 1));
     driver
         .leftBumper()
         .whileTrue(
             DriveCommands.joystickDrive(
                 drive,
-                () -> -driver.getLeftY() * OperatorConstants.precisionMode,
-                () -> -driver.getLeftX() * OperatorConstants.precisionMode,
-                () -> -driver.getRightX() * OperatorConstants.precisionMode,
-                () -> OperatorConstants.deadband));
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                () -> OperatorConstants.deadband,
+                () -> OperatorConstants.precisionMode));
 
     // Lock to 0° when A button is held
     driver
@@ -238,9 +247,25 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    driver.leftTrigger().onTrue(Commands.select(outtakeCommands, elevator::getSetpoint));
+    // driver.leftTrigger().onTrue(Commands.select(outtakeCommands,
+    // elevator::getSetpoint));
+    outtake.setDefaultCommand(outtake.setVoltage(() -> 0));
+    hopper.setDefaultCommand(hopper.setVoltage(() -> 0));
 
-    driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
+    driver
+        .leftTrigger()
+        .onTrue(
+            Commands.parallel(outtake.setVoltage(() -> -2), hopper.setVoltage(() -> -10))
+                .until(() -> (outtake.getDetected() && elevator.intaking()))
+                .andThen(
+                    () ->
+                        Commands.parallel(
+                            outtake.setVoltage(() -> 0), hopper.setVoltage(() -> 0))));
+
+    driver
+        .rightTrigger()
+        .onTrue(Commands.parallel(outtake.setVoltage(() -> 12), hopper.setVoltage(() -> 3)))
+        .onFalse(Commands.parallel(outtake.setVoltage(() -> 0), hopper.setVoltage(() -> 0)));
 
     operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
     operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
@@ -249,12 +274,12 @@ public class RobotContainer {
     operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
     operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
 
-    operator.leftTrigger().onTrue(elevator.homingSequence());
+    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
     operator
         .rightTrigger()
         .whileTrue(
-            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(operator.getLeftY(), 0.05)))
+            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
         .onFalse(elevator.setVoltage(() -> 0)); // TODO: changed operator control scheme to home
     // on left, test and get Connor's feedback on
     // input squaring

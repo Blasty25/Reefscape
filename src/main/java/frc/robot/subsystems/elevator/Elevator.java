@@ -164,13 +164,13 @@ public class Elevator extends SubsystemBase {
               switch (getStages()) {
                 case 0 -> ffVolts =
                     ff0.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
                 case 1 -> ffVolts =
                     ff1.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
                 default -> ffVolts =
                     ff2.calculateWithVelocities(
-                        inputs.velocityMetersPerSecond, pid.getSetpoint().velocity);
+                        inputs.motorVelocityMetersPerSecond, pid.getSetpoint().velocity);
               };
           double pidVolts = pid.calculate(inputs.positionMeters, meters);
 
@@ -230,7 +230,7 @@ public class Elevator extends SubsystemBase {
               io.setVoltage(homingVolts.get());
               homed =
                   homingDebouncer.calculate(
-                      Math.abs(inputs.velocityMetersPerSecond) <= homingVelocityThresh.get());
+                      Math.abs(inputs.motorVelocityMetersPerSecond) <= homingVelocityThresh.get());
             })
         .until(() -> homed)
         .andThen(
@@ -252,9 +252,18 @@ public class Elevator extends SubsystemBase {
     return inputs.setpoint;
   }
 
+  public double getVelocity() {
+    return inputs.motorVelocityMetersPerSecond;
+  }
+
+  public boolean isAtGoal() {
+    return atGoal;
+  }
+
   @AutoLogOutput(key = "Elevator/Intaking")
   public boolean intaking() {
-    return (inputs.targetPositionMeters == 0.057) || (inputs.positionMeters < 0.2);
+    return ((inputs.setpoint == ElevatorSetpoint.INTAKE)
+        && (Math.abs(inputs.positionMeters - elevatorHeights.get(ElevatorSetpoint.INTAKE)) < 0.2));
   }
 
   public int getStages() {
@@ -266,6 +275,13 @@ public class Elevator extends SubsystemBase {
     } else {
       return 0;
     }
+  }
+
+  public Command reset() {
+    return this.run(
+        () -> {
+          inputs.setpoint = ElevatorSetpoint.ZERO;
+        });
   }
 
   public Command staticCharacterization(double outputRampRate) {
@@ -281,7 +297,8 @@ public class Elevator extends SubsystemBase {
               Logger.recordOutput(
                   "Elevator/StaticCharacterizationOutput", state.characterizationOutput);
             })
-        .until(() -> inputs.velocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
+        .until(
+            () -> inputs.motorVelocityMetersPerSecond >= staticCharacterizationVelocityThresh.get())
         .finallyDo(
             () -> {
               timer.stop();

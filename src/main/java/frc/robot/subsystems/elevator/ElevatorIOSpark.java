@@ -87,7 +87,7 @@ public class ElevatorIOSpark implements ElevatorIO {
   public void updateInputs(ElevatorIOInputsAutoLogged inputs) {
     sparkStickyFault = false;
     ifOk(spark, encoder::getPosition, (value) -> inputs.positionMeters = value);
-    ifOk(spark, encoder::getVelocity, (value) -> inputs.motorVelocity = value);
+    ifOk(spark, encoder::getVelocity, (value) -> inputs.motorVelocityMetersPerSecond = value);
     ifOk(
         spark,
         new DoubleSupplier[] {spark::getAppliedOutput, spark::getBusVoltage},
@@ -106,7 +106,10 @@ public class ElevatorIOSpark implements ElevatorIO {
         spark,
         new DoubleSupplier[] {followerSpark::getAppliedOutput, followerSpark::getBusVoltage},
         (values) -> inputs.followerAppliedVolts = values[0] * values[1]);
-    ifOk(followerSpark, encoder::getVelocity, (value) -> inputs.followerVelocity = value);
+    ifOk(
+        followerSpark,
+        encoder::getVelocity,
+        (value) -> inputs.followerVelocityMetersPerSecond = value);
     ifOk(
         followerSpark,
         followerSpark::getOutputCurrent,
