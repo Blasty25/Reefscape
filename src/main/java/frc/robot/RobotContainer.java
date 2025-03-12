@@ -14,6 +14,8 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -196,8 +198,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
+            () -> driver.getLeftY(),
+            () -> driver.getLeftX(),
             () -> -driver.getRightX(),
             () -> OperatorConstants.deadband));
     driver
@@ -223,6 +225,7 @@ public class RobotContainer {
 
     // Switch to X pattern when X button is pressed
     driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    driver.rightBumper().onTrue(Commands.runOnce(drive::logPose, drive));
 
     // Reset gyro to 0° when B button is pressed
     driver
@@ -263,6 +266,10 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    NamedCommands.registerCommand("autovator", elevator.setSetpoint(() -> ElevatorSetpoint.L4));
+    NamedCommands.registerCommand("home", elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
+    NamedCommands.registerCommand("home", outtake.setVoltage(0));
+    NamedCommands.registerCommand("shoot", outtake.setVoltage(2)); // check voltage later
+    return new PathPlannerAuto("middle");
   }
 }

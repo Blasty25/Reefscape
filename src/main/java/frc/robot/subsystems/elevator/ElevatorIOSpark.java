@@ -22,7 +22,7 @@ public class ElevatorIOSpark implements ElevatorIO {
   private final Debouncer followerConnectedDebounce = new Debouncer(0.5);
 
   public ElevatorIOSpark() {
-    var sparkConfig = new SparkMaxConfig();
+    SparkMaxConfig sparkConfig = new SparkMaxConfig();
     sparkConfig
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(ElevatorConstants.current)
@@ -45,7 +45,7 @@ public class ElevatorIOSpark implements ElevatorIO {
         .busVoltagePeriodMs(20)
         .outputCurrentPeriodMs(20);
 
-    var followerConfig = new SparkMaxConfig();
+    SparkMaxConfig followerConfig = new SparkMaxConfig();
     followerConfig
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(ElevatorConstants.current)

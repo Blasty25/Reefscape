@@ -17,6 +17,10 @@ import static edu.wpi.first.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -42,6 +46,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -61,13 +68,14 @@ public class Drive extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   static final Lock odometryLock = new ReentrantLock();
+  private List<Pose2d> poseHistory = new ArrayList<>();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
-
+  private RobotConfig config;
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = new Rotation2d();
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
@@ -108,6 +116,30 @@ public class Drive extends SubsystemBase {
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
+
+    try {
+      config = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    AutoBuilder.configure(
+        this::getPose,
+        this::setPose,
+        this::getChassisSpeeds,
+        (speeds, feedforwards) -> runVelocity(speeds),
+        new PPHolonomicDriveController(
+            new PIDConstants(XkP.getAsDouble(), 0.0, 0.0),
+            new PIDConstants(headingkP.getAsDouble(), 0.0, 0.0)),
+        config,
+        () -> {
+          var alliance = DriverStation.getAlliance();
+          if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+          }
+          return false;
+        },
+        this);
 
     // Configure SysId
     sysId =
@@ -243,6 +275,19 @@ public class Drive extends SubsystemBase {
     }
     kinematics.resetHeadings(headings);
     stop();
+  }
+
+  public void logPose() {
+    Pose2d newPose = poseEstimator.getEstimatedPosition();
+    poseHistory.add(newPose);
+    logHistory();
+  }
+
+  public void logHistory(){
+    for(int i = 0; i < poseHistory.size(); i++){
+      Pose2d pose = poseHistory.get(i);
+      Logger.recordOutput("Drive/Pose " + i, pose);
+    }
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */
