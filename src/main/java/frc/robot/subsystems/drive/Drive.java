@@ -46,7 +46,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -283,8 +282,8 @@ public class Drive extends SubsystemBase {
     logHistory();
   }
 
-  public void logHistory(){
-    for(int i = 0; i < poseHistory.size(); i++){
+  public void logHistory() {
+    for (int i = 0; i < poseHistory.size(); i++) {
       Pose2d pose = poseHistory.get(i);
       Logger.recordOutput("Drive/Pose " + i, pose);
     }
