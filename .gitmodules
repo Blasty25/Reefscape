@@ -1,0 +1,6 @@
+[submodule "src/main/java/frc/robot/subsystems/src/main/java/frc/robot/subsystems/vision"]
+	path = src/main/java/frc/robot/subsystems/src/main/java/frc/robot/subsystems/vision
+	url = https://github.com/SpaceStudios/1086-Vision-2025.git
+[submodule "src/main/java/frc/robot/subsystems/vision/src/main/java/frc/robot/subsystems/vision"]
+	path = src/main/java/frc/robot/subsystems/vision/src/main/java/frc/robot/subsystems/vision
+	url = https://github.com/SpaceStudios/1086-Vision-2025.git
