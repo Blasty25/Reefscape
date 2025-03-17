@@ -440,7 +440,8 @@ public class Drive extends SubsystemBase {
 
   public Pose2d getClosestRightPose() {
     Pose2d targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.poseRight);
-    Logger.recordOutput("Drive/Debug/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+    Logger.recordOutput(
+        "Drive/Debug/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
     return targetPose;
   }
 }

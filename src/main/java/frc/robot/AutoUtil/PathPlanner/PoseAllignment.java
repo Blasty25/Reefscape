@@ -7,9 +7,7 @@ package frc.robot.AutoUtil.PathPlanner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /** Add your docs here. */
 public class PoseAllignment {
@@ -25,11 +23,11 @@ public class PoseAllignment {
     poseLeft.add(new Pose2d(5.359, 5.242, new Rotation2d(-120.838)));
     poseLeft.add(new Pose2d(3.884, 5.374, new Rotation2d(-59.886)));
 
-    poseRight.add(7, new Pose2d(3.021, 3.863, new Rotation2d()));
-    poseRight.add(8, new Pose2d(3.848, 2.688, new Rotation2d(59.744)));
-    poseRight.add(9, new Pose2d(5.347, 2.868, new Rotation2d(122.152)));
-    poseRight.add(10, new Pose2d(5.958, 4.151, new Rotation2d(180)));
-    poseRight.add(11, new Pose2d(5.095, 5.374, new Rotation2d(-120.838)));
-    poseRight.add(12, new Pose2d(3.656, 5.242, new Rotation2d()));
+    poseRight.add(new Pose2d(3.021, 3.863, new Rotation2d()));
+    poseRight.add(new Pose2d(3.848, 2.688, new Rotation2d(59.744)));
+    poseRight.add(new Pose2d(5.347, 2.868, new Rotation2d(122.152)));
+    poseRight.add(new Pose2d(5.958, 4.151, new Rotation2d(180)));
+    poseRight.add(new Pose2d(5.095, 5.374, new Rotation2d(-120.838)));
+    poseRight.add(new Pose2d(3.656, 5.242, new Rotation2d()));
   }
 }

@@ -69,6 +69,8 @@ public class RobotContainer {
   public final Outtake outtake;
   public final Vision vision;
   public final PoseAllignment autoPose = new PoseAllignment();
+  Command pathfindLeft;
+  Command pathfindRight;
 
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -191,6 +193,9 @@ public class RobotContainer {
 
     autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
 
+    pathfindLeft = AutoBuilder.pathfindToPose(drive.autoLeftPose(), constraints, 0.0);
+    pathfindRight = AutoBuilder.pathfindToPose(drive.getClosestRightPose(), constraints, 0.0);
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -202,21 +207,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    // Create the constraints to use while pathfinding
-
-    // Since AutoBuilder is configured, we can use it to build pathfinding commands
-    Command pathfindLeft = AutoBuilder.pathfindToPose(drive.autoLeftPose(), constraints, 0.0);
-
-
-    Command pathfindRight =
-        AutoBuilder.pathfindToPose(
-            drive.autoLeftPose(),
-            constraints,
-            0.0 // Goal end velocity in meters/sec // Rotation delay distance in meters. This is
-            // how far the robot should travel
-            // before attempting to rotate.
-            );
-
     // Default command, normal field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
