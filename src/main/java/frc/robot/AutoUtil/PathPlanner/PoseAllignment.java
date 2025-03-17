@@ -12,22 +12,38 @@ import java.util.List;
 /** Add your docs here. */
 public class PoseAllignment {
 
-  public List<Pose2d> poseLeft = new ArrayList<>();
-  public List<Pose2d> poseRight = new ArrayList<>();
+  public List<Pose2d> blueLeft = new ArrayList<>();
+  public List<Pose2d> blueRight = new ArrayList<>();
+  public List<Pose2d> redLeft = new ArrayList<>();
+  public List<Pose2d> redRight = new ArrayList<>();
 
   public PoseAllignment() {
-    poseLeft.add(new Pose2d(3.057, 4.175, new Rotation2d()));
-    poseLeft.add(new Pose2d(3.608, 2.820, new Rotation2d(59.744)));
-    poseLeft.add(new Pose2d(5.083, 2.688, new Rotation2d(122.152)));
-    poseLeft.add(new Pose2d(5.970, 3.851, new Rotation2d(-180.000)));
-    poseLeft.add(new Pose2d(5.359, 5.242, new Rotation2d(-120.838)));
-    poseLeft.add(new Pose2d(3.884, 5.374, new Rotation2d(-59.886)));
+    blueLeft.add(new Pose2d(3.190, 4.142, new Rotation2d()));
+    blueLeft.add(new Pose2d(3.652, 2.929, new Rotation2d(1.000)));
+    blueLeft.add(new Pose2d(4.981, 2.764, new Rotation2d(2.127)));
+    blueLeft.add(new Pose2d(5.831, 3.858, new Rotation2d(-3.141)));
+    blueLeft.add(new Pose2d(5.344, 5.112, new Rotation2d(-2.121)));
+    blueLeft.add(new Pose2d(4.011, 5.271, new Rotation2d(-1.099)));
 
-    poseRight.add(new Pose2d(3.021, 3.863, new Rotation2d()));
-    poseRight.add(new Pose2d(3.848, 2.688, new Rotation2d(59.744)));
-    poseRight.add(new Pose2d(5.347, 2.868, new Rotation2d(122.152)));
-    poseRight.add(new Pose2d(5.958, 4.151, new Rotation2d(180)));
-    poseRight.add(new Pose2d(5.095, 5.374, new Rotation2d(-120.838)));
-    poseRight.add(new Pose2d(3.656, 5.242, new Rotation2d()));
+    blueRight.add(new Pose2d(3.193, 3.851, new Rotation2d()));
+    blueRight.add(new Pose2d(3.878, 2.734, new Rotation2d(1.000)));
+    blueRight.add(new Pose2d(5.262, 2.929, new Rotation2d(2.127)));
+    blueRight.add(new Pose2d(5.842, 4.100, new Rotation2d(-3.141)));
+    blueRight.add(new Pose2d(5.042, 5.287, new Rotation2d(-2.121)));
+    blueRight.add(new Pose2d(3.673, 5.130, new Rotation2d(-1.099)));
+
+    redLeft.add(new Pose2d(11.592, 4.175, new Rotation2d()));
+    redLeft.add(new Pose2d(12.24, 2.95, new Rotation2d(0.980)));
+    redLeft.add(new Pose2d(13.60, 2.78, new Rotation2d(2.133)));
+    redLeft.add(new Pose2d(14.541, 3.863, new Rotation2d(-3.188)));
+    redLeft.add(new Pose2d(12.258, 5.077, new Rotation2d(-2.119)));
+    redLeft.add(new Pose2d(12.476, 5.224, new Rotation2d(-1.028)));
+
+    redRight.add(new Pose2d(11.532, 3.887, new Rotation2d()));
+    redRight.add(new Pose2d(12.58, 2.73, new Rotation2d(0.980)));
+    redRight.add(new Pose2d(13.930, 2.808, new Rotation2d(2.133)));
+    redRight.add(new Pose2d(14.517, 4.163, new Rotation2d(-3.188)));
+    redRight.add(new Pose2d(13.678, 5.338, new Rotation2d(-2.119)));
+    redRight.add(new Pose2d(12.203, 5.266, new Rotation2d(-1.028)));
   }
 }

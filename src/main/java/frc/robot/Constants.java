@@ -24,6 +24,7 @@ public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean tuningMode = true;
+  public static final boolean allianceMode = true; // False = Red, True = Blue
 
   public static boolean disableHAL = false;
 

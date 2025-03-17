@@ -175,9 +175,6 @@ public class Drive extends SubsystemBase {
     }
     odometryLock.unlock();
 
-    // PathFinding
-    autoLeftPose();
-
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
       for (var module : modules) {
@@ -432,16 +429,25 @@ public class Drive extends SubsystemBase {
     return new Rotation2d();
   }
 
-  public Pose2d autoLeftPose() {
-    Pose2d targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.poseLeft);
+  public Pose2d autoLeftPose(boolean alliance) {
+    Pose2d targetPose;
+    if (alliance == true) {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueLeft);
+    } else {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redLeft);
+    }
     Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose.getTranslation());
     return targetPose;
   }
 
-  public Pose2d getClosestRightPose() {
-    Pose2d targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.poseRight);
-    Logger.recordOutput(
-        "Drive/Debug/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+  public Pose2d autoRightPose(boolean alliance) {
+    Pose2d targetPose;
+    if (alliance == true) {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueRight);
+    } else {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redRight);
+    }
+    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose.getTranslation());
     return targetPose;
   }
 }

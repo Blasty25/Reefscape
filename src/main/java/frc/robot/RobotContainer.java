@@ -14,7 +14,6 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.MathUtil;
@@ -29,6 +28,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoUtil.AutoRoutines;
 import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
+import frc.robot.subsystems.drive.Commands.AutoLeftFind;
+import frc.robot.subsystems.drive.Commands.AutoRightFind;
 import frc.robot.subsystems.drive.Commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -69,8 +70,6 @@ public class RobotContainer {
   public final Outtake outtake;
   public final Vision vision;
   public final PoseAllignment autoPose = new PoseAllignment();
-  Command pathfindLeft;
-  Command pathfindRight;
 
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -193,9 +192,6 @@ public class RobotContainer {
 
     autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
 
-    pathfindLeft = AutoBuilder.pathfindToPose(drive.autoLeftPose(), constraints, 0.0);
-    pathfindRight = AutoBuilder.pathfindToPose(drive.getClosestRightPose(), constraints, 0.0);
-
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -240,7 +236,7 @@ public class RobotContainer {
 
     // Switch to X pattern when X button is pressed
     driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    // driver.rightBumper().onTrue(Commands.runOnce(drive::logPose, drive));
+    driver.y().onTrue(Commands.runOnce(drive::logPose, drive));
 
     // Reset gyro to 0° when B button is pressed
     driver
@@ -275,8 +271,9 @@ public class RobotContainer {
 
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
-    driver.leftBumper().whileTrue(pathfindLeft);
-    driver.rightBumper().whileTrue(pathfindRight);
+    // PARMS (Subsystem, Alliance)  if True BLUE alliancce if False RED alliance
+    driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
+    driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
 
     operator
         .rightTrigger()
