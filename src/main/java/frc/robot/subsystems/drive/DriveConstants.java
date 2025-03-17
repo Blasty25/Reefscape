@@ -11,8 +11,10 @@ public class DriveConstants {
   public static class ControlConstants {
     public static final double kPAngle = 5.0;
     public static final double kDAngle = 0.4;
-    public static final double angleMaxVelocity = 8.0;
+    public static final double angleMaxVelocity = 5.0;
     public static final double angleMaxAccel = 20.0;
+    public static final double maxAccel = 4.75;
+    public static final double maxVelocity = 3.25;
   }
 }
 ;

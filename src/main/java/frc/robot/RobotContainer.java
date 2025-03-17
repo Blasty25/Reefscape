@@ -15,6 +15,7 @@ package frc.robot;
 
 import choreo.auto.AutoFactory;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -31,6 +32,7 @@ import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.subsystems.drive.Commands.AutoLeftFind;
 import frc.robot.subsystems.drive.Commands.AutoRightFind;
 import frc.robot.subsystems.drive.Commands.DriveCommands;
+import frc.robot.subsystems.drive.Commands.HumanPlayerRoute;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -74,9 +76,9 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
-
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final Command pathplannerChooser;
 
   // private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
 
@@ -165,15 +167,9 @@ public class RobotContainer {
     AutoRoutines autoRoutines = new AutoRoutines(autoFactory, elevator, outtake);
 
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
-    autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
-    autoChooser.addOption("Center-Reset", autoRoutines.centerResetAuto().cmd());
-    autoChooser.addOption("Center-DR4", autoRoutines.centerToDR4Auto().cmd());
-    autoChooser.addOption("Center-DL4", autoRoutines.centerToDL4Auto().cmd());
-    autoChooser.addOption("Blue-ER4", autoRoutines.blueXToER4Auto().cmd());
-    autoChooser.addOption("Red-CL4", autoRoutines.redXToCL4Auto().cmd());
-    autoChooser.addOption("Spit", autoRoutines.spitAuto().cmd());
-    autoChooser.addOption("Center-DR4-FL4", autoRoutines.centerToDR4toFL4Auto().cmd());
+    autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");
+    autoChooser.addOption("None", Commands.print("No Auto Selected"));
+
     // Set up SysId routines
     autoChooser.addOption(
         "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
@@ -191,6 +187,8 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+    pathplannerChooser = new PathPlannerAuto("middle");
+    autoChooser.addDefaultOption("Middle", pathplannerChooser);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -271,9 +269,10 @@ public class RobotContainer {
 
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
-    // PARMS (Subsystem, Alliance)  if True BLUE alliancce if False RED alliance
+    // PARMS (Subsystem, Alliance) if True BLUE alliancce if False RED alliance
     driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
     driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
+    driver.x().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
 
     operator
         .rightTrigger()

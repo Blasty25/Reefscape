@@ -447,7 +447,19 @@ public class Drive extends SubsystemBase {
     } else {
       targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redRight);
     }
-    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose.getTranslation());
+    Logger.recordOutput(
+        "Drive/Deubg/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+    return targetPose;
+  }
+
+  public Pose2d autoHP(boolean alliance) {
+    Pose2d targetPose;
+    if (alliance == true) {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPBlue);
+    } else {
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPRed);
+    }
+    Logger.recordOutput("Drive/Debug/PathPlanner/Pose/HPPose", targetPose.getTranslation());
     return targetPose;
   }
 }

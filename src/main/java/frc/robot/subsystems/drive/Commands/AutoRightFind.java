@@ -8,13 +8,18 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants.ControlConstants;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class AutoRightFind extends Command {
   private Drive drive;
   private Command autoBuilder;
   private PathConstraints constraints =
-      new PathConstraints(3.0, 4.0, Math.toRadians(540), Math.toRadians(720));
+      new PathConstraints(
+          ControlConstants.maxVelocity,
+          ControlConstants.maxAccel,
+          ControlConstants.angleMaxVelocity,
+          ControlConstants.angleMaxAccel);
   private boolean alliance;
 
   /** Creates a new AutoFind. */
@@ -26,7 +31,7 @@ public class AutoRightFind extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    this.autoBuilder = AutoBuilder.pathfindToPose(drive.autoRightPose(alliance), constraints, 0.0);
+    this.autoBuilder = AutoBuilder.pathfindToPose(drive.autoRightPose(alliance), constraints, 3.0);
     autoBuilder.schedule();
   }
 

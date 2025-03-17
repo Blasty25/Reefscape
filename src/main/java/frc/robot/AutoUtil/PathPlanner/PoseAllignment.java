@@ -16,6 +16,8 @@ public class PoseAllignment {
   public List<Pose2d> blueRight = new ArrayList<>();
   public List<Pose2d> redLeft = new ArrayList<>();
   public List<Pose2d> redRight = new ArrayList<>();
+  public List<Pose2d> HPRed = new ArrayList<>();
+  public List<Pose2d> HPBlue = new ArrayList<>();
 
   public PoseAllignment() {
     blueLeft.add(new Pose2d(3.190, 4.142, new Rotation2d()));
@@ -45,5 +47,11 @@ public class PoseAllignment {
     redRight.add(new Pose2d(14.517, 4.163, new Rotation2d(-3.188)));
     redRight.add(new Pose2d(13.678, 5.338, new Rotation2d(-2.119)));
     redRight.add(new Pose2d(12.203, 5.266, new Rotation2d(-1.028)));
+
+    HPRed.add(new Pose2d(16.416, 7.096, new Rotation2d(-2.202)));
+    HPRed.add(new Pose2d(16.234, 0.871, new Rotation2d(2.121)));
+
+    HPBlue.add(new Pose2d(1.182, 7.060, new Rotation2d(-0.945)));
+    HPBlue.add(new Pose2d(1.085, 0.955, new Rotation2d(0.955)));
   }
 }
