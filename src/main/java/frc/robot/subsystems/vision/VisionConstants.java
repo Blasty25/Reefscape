@@ -1,67 +1,39 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
+/** Add your docs here. */
 public class VisionConstants {
-  // AprilTag layout
-  public static AprilTagFieldLayout aprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
-
-  // Camera names, must match names configured on coprocessor
-  public static String camera0Name = "1086-9281-A";
-  public static String camera1Name = "camera_1";
-
-  // Robot to camera transforms
-  // (Not used by Limelight, configure in web UI instead)
-  public static Transform3d robotToCamera0 =
-      new Transform3d(
-          Units.inchesToMeters(8.410427),
-          Units.inchesToMeters(11.276584),
-          -Units.inchesToMeters(8.209095),
-          new Rotation3d(0.0, -Units.degreesToRadians(36.053760), Units.degreesToRadians(20)));
-  public static Transform3d robotToCamera1 =
-      new Transform3d(
-          -Units.inchesToMeters(8.410427),
-          Units.inchesToMeters(11.276584),
-          -Units.inchesToMeters(8.209095),
-          new Rotation3d(0.0, -Units.degreesToRadians(36.053760), -Units.degreesToRadians(20)));
-
-  // Basic filtering thresholds
-  public static double maxAmbiguity = 0.3;
-  public static double maxZError = 0.75;
-
-  // Standard deviation baselines, for 1 meter distance and 1 tag
-  // (Adjusted automatically based on distance and # of tags)
-  public static double linearStdDevBaseline = 0.02; // Meters
-  public static double angularStdDevBaseline = 0.06; // Radians
-
-  // Standard deviation multipliers for each camera
-  // (Adjust to trust some cameras more than others)
-  public static double[] cameraStdDevFactors =
-      new double[] {
-        1.0, // Camera 0
-        0.0 // Camera 1
+  public static final String[] CameraIDs =
+      new String[] {"Camera_Module_v1_l", "Camera_Module_v1_r"};
+  public static final Transform3d[] CameraTransforms =
+      new Transform3d[] {
+        new Transform3d(
+            new Translation3d(
+                -Units.inchesToMeters(15), -Units.inchesToMeters(9.5), Units.inchesToMeters(12)),
+            new Rotation3d(Units.degreesToRadians(90), 0, Units.degreesToRadians(-90))),
+        new Transform3d(
+            new Translation3d(
+                Units.inchesToMeters(15), Units.inchesToMeters(0), Units.inchesToMeters(9)),
+            new Rotation3d(
+                Units.degreesToRadians(0), Units.degreesToRadians(0), Units.degreesToRadians(0)))
       };
+  public static final PoseStrategy strategy = PoseStrategy.LOWEST_AMBIGUITY;
+  public static final AprilTagFields field = AprilTagFields.kDefaultField;
 
-  // Multipliers to apply for MegaTag 2 observations
-  public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-  public static double angularStdDevMegatag2Factor =
-      Double.POSITIVE_INFINITY; // No rotation data available
+  public static final Matrix<N3, N1> singleTagStdDevs = VecBuilder.fill(2, 2, 8);
+  public static final Matrix<N3, N1> multiTagStdDevs = VecBuilder.fill(0.1, 0.1, 1);
 }

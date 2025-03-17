@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import choreo.auto.AutoFactory;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -27,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.AutoUtil.AutoRoutines;
 import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.subsystems.drive.Commands.AutoLeftFind;
 import frc.robot.subsystems.drive.Commands.AutoRightFind;
@@ -53,10 +51,8 @@ import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.util.AllianceFlipUtil;
-import java.util.Arrays;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.vision.io.VisionIO_REAL;
+import frc.robot.subsystems.vision.io.VisionIO_SIM;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -76,7 +72,6 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
-  private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
   private final Command pathplannerChooser;
 
@@ -96,12 +91,11 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontLeft),
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+                new ModuleIOTalonFX(TunerConstants.BackRight),
+                new VisionIO_REAL());
         elevator = new Elevator(new ElevatorIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}); // disabled
+        vision = new Vision(new VisionIO_REAL());
         break;
 
       case SIM:
@@ -112,10 +106,11 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontLeft),
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+                new ModuleIOSim(TunerConstants.BackRight),
+                new VisionIO_SIM());
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim());
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        vision = new Vision(new VisionIO_SIM());
         break;
 
       default:
@@ -126,10 +121,11 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                new ModuleIO() {});
+                new ModuleIO() {},
+                new VisionIO_SIM());
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        vision = new Vision(new VisionIO_SIM());
         break;
     }
 
@@ -148,23 +144,6 @@ public class RobotContainer {
     // Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
     // Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
     // Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
-
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
-
-    AutoRoutines autoRoutines = new AutoRoutines(autoFactory, elevator, outtake);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");
