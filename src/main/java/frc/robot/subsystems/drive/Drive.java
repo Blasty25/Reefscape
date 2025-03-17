@@ -1,4 +1,3 @@
-// Copyright 2021-2025 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
 // This program is free software; you can redistribute it and/or
@@ -21,6 +20,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -37,12 +37,14 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
@@ -68,6 +70,7 @@ public class Drive extends SubsystemBase {
 
   static final Lock odometryLock = new ReentrantLock();
   private List<Pose2d> poseHistory = new ArrayList<>();
+  private final PoseAllignment poseAllignment = new PoseAllignment();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
@@ -85,7 +88,8 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition()
       };
   private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+      new SwerveDrivePoseEstimator(
+          kinematics, rawGyroRotation, lastModulePositions, new Pose2d(0, 0, new Rotation2d()));
 
   private static final LoggedTunableNumber XkP =
       new LoggedTunableNumber("Auto/X/kP", AutoConstants.Gains.x.kP);
@@ -97,6 +101,11 @@ public class Drive extends SubsystemBase {
   private PIDController autoXPID = new PIDController(XkP.getAsDouble(), 0.0, 0.0);
   private PIDController autoYPID = new PIDController(YkP.getAsDouble(), 0.0, 0.0);
   private PIDController autoHeadingPID = new PIDController(headingkP.getAsDouble(), 0.0, 0.0);
+
+  public PathConstraints constraints =
+      new PathConstraints(5.25, 4.75, Units.degreesToRadians(640), Units.degreesToRadians(820));
+
+  public Pose2d targetAllignmentPose;
 
   public Drive(
       GyroIO gyroIO,
@@ -126,7 +135,7 @@ public class Drive extends SubsystemBase {
         this::getPose,
         this::setPose,
         this::getChassisSpeeds,
-        (speeds, feedforwards) -> runVelocity(speeds),
+        (speeds) -> runVelocity(speeds),
         new PPHolonomicDriveController(
             new PIDConstants(XkP.getAsDouble(), 0.0, 0.0),
             new PIDConstants(headingkP.getAsDouble(), 0.0, 0.0)),
@@ -166,6 +175,9 @@ public class Drive extends SubsystemBase {
     }
     odometryLock.unlock();
 
+    // PathFinding
+    autoLeftPose();
+
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
       for (var module : modules) {
@@ -201,6 +213,7 @@ public class Drive extends SubsystemBase {
       if (gyroInputs.connected) {
         // Use the real gyro angle
         rawGyroRotation = gyroInputs.odometryYawPositions[i];
+        checkTip();
       } else {
         // Use the angle delta from the kinematics and module deltas
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
@@ -261,6 +274,13 @@ public class Drive extends SubsystemBase {
   /** Stops the drive. */
   public void stop() {
     runVelocity(new ChassisSpeeds());
+  }
+
+  public void checkTip() {
+    if (gyroInputs.tilt >= 0.0) {
+      Logger.recordOutput("Drive/Debug/Gyro/Tilt", gyroInputs.tilt);
+      stop();
+    }
   }
 
   /**
@@ -409,7 +429,18 @@ public class Drive extends SubsystemBase {
   }
 
   public Rotation2d getReefAngle() {
-
     return new Rotation2d();
+  }
+
+  public Pose2d autoLeftPose() {
+    Pose2d targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.poseLeft);
+    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose.getTranslation());
+    return targetPose;
+  }
+
+  public Pose2d getClosestRightPose() {
+    Pose2d targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.poseRight);
+    Logger.recordOutput("Drive/Debug/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+    return targetPose;
   }
 }
