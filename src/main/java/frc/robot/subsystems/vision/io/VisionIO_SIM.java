@@ -35,6 +35,7 @@ public class VisionIO_SIM implements VisionIO {
     SimCameraProperties camProperties = new SimCameraProperties();
     camProperties.setCalibration(320, 320, Rotation2d.fromDegrees(70));
     camProperties.setFPS(90);
+    SimCameraProperties.PI4_LIFECAM_640_480();
 
     cameras = new PhotonCamera[VisionConstants.CameraIDs.length];
     simCameras = new PhotonCameraSim[cameras.length];

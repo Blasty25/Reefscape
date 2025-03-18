@@ -49,7 +49,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.io.VisionIO;
+import frc.robot.subsystems.vision.util.VisionFunctions;
 import frc.robot.subsystems.vision.util.VisionResult;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.ArrayList;
@@ -93,8 +95,7 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition()
       };
   private SwerveDrivePoseEstimator poseEstimator;
-  private VisionResult vFunctions = new VisionResult(new Pose3d(), Timer.getTimestamp());
-
+  private VisionFunctions vision;
   private static final LoggedTunableNumber XkP =
       new LoggedTunableNumber("Auto/X/kP", AutoConstants.Gains.x.kP);
   private static final LoggedTunableNumber YkP =
@@ -131,9 +132,7 @@ public class Drive extends SubsystemBase {
             kinematics,
             rawGyroRotation,
             lastModulePositions,
-            new Pose2d(0, 0, new Rotation2d()),
-            vFunctions.getStdDevs(),
-            vFunctions.getStdDevs());
+            new Pose2d(0, 0, new Rotation2d()));
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);

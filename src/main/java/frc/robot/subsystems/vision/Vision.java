@@ -22,6 +22,16 @@ public class Vision extends SubsystemBase {
     io.setRobotPose(pose);
   }
 
+  public Pose2d[] getRobotPose() {
+    VisionResult[] results = getUnreadResults();
+    Pose2d[] poses = new Pose2d[results.length];
+    for (int i=0; i<poses.length; i++) {
+      poses[i] = results[i].getPose2d();
+    }
+    return poses;
+  }
+
+
   @Override
   public void periodic() {
     io.updateInputs();
