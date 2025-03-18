@@ -30,7 +30,7 @@ public class HumanPlayerRoute extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    this.autoBuilder = AutoBuilder.pathfindToPose(drive.autoHP(alliance), constraints, 3.0);
+    this.autoBuilder = AutoBuilder.pathfindToPose(drive.autoHP(alliance), constraints, 2.0);
     autoBuilder.schedule();
   }
 

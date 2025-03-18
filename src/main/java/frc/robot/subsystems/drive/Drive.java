@@ -396,6 +396,11 @@ public class Drive extends SubsystemBase {
     return getMaxLinearSpeedMetersPerSec() / DRIVE_BASE_RADIUS;
   }
 
+  public ChassisSpeeds getSpeed() {
+    ChassisSpeeds currentSpeed = kinematics.toChassisSpeeds(getModuleStates());
+    return currentSpeed;
+  }
+
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
@@ -459,6 +464,7 @@ public class Drive extends SubsystemBase {
     } else {
       targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPRed);
     }
+
     Logger.recordOutput("Drive/Debug/PathPlanner/Pose/HPPose", targetPose.getTranslation());
     return targetPose;
   }

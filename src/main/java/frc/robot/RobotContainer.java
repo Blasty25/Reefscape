@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import choreo.auto.AutoFactory;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -27,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.AutoUtil.AutoRoutines;
 import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.subsystems.drive.Commands.AutoLeftFind;
 import frc.robot.subsystems.drive.Commands.AutoRightFind;
@@ -52,11 +50,6 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.util.AllianceFlipUtil;
-import java.util.Arrays;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -70,13 +63,11 @@ public class RobotContainer {
   public final Drive drive;
   public final Elevator elevator;
   public final Outtake outtake;
-  public final Vision vision;
   public final PoseAllignment autoPose = new PoseAllignment();
 
   // Controller
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
-  private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
   private final Command pathplannerChooser;
 
@@ -99,9 +90,6 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSpark());
         outtake = new Outtake(new OuttakeIOSpark());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}); // disabled
         break;
 
       case SIM:
@@ -115,7 +103,6 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.BackRight));
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim());
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
 
       default:
@@ -129,7 +116,6 @@ public class RobotContainer {
                 new ModuleIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         break;
     }
 
@@ -148,23 +134,6 @@ public class RobotContainer {
     // Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
     // Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
     // Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
-
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
-
-    AutoRoutines autoRoutines = new AutoRoutines(autoFactory, elevator, outtake);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");
@@ -210,16 +179,16 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> OperatorConstants.deadband,
             () -> 1));
-    // driver
-    // .leftBumper()
-    // .whileTrue(
-    // DriveCommands.joystickDrive(
-    // drive,
-    // () -> -driver.getLeftY(),
-    // () -> -driver.getLeftX(),
-    // () -> -driver.getRightX(),
-    // () -> OperatorConstants.deadband,
-    // () -> OperatorConstants.precisionMode));
+    driver
+        .x()
+        .whileTrue(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                () -> OperatorConstants.deadband,
+                () -> OperatorConstants.precisionMode));
 
     // Lock to 0° when A button is held
     driver
@@ -227,8 +196,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
+                () -> driver.getLeftY(),
+                () -> driver.getLeftX(),
                 () -> new Rotation2d(),
                 () -> OperatorConstants.deadband));
 
@@ -272,7 +241,9 @@ public class RobotContainer {
     // PARMS (Subsystem, Alliance) if True BLUE alliancce if False RED alliance
     driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
     driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
-    driver.x().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
+    driver.povDown().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
+
+    // driver.leftBumper().whileTrue(new PidAlign(drive, Constants.allianceMode));
 
     operator
         .rightTrigger()

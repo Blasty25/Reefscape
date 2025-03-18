@@ -69,5 +69,6 @@
   "[java]": {
     "editor.defaultFormatter": "redhat.java"
   },
-  "wpilib.selectDefaultSimulateExtension": false
+  "wpilib.selectDefaultSimulateExtension": false,
+  "java.debug.settings.onBuildFailureProceed": true
 }
