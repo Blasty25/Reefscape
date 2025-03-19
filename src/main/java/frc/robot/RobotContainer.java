@@ -40,140 +40,139 @@ import frc.robot.subsystems.elevator.ElevatorIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
-    // Subsystems
-    public final Drive drive;
-    public final Elevator elevator;
-    public final PoseAllignment autoPose = new PoseAllignment();
+  // Subsystems
+  public final Drive drive;
+  public final Elevator elevator;
+  public final PoseAllignment autoPose = new PoseAllignment();
 
-    // Controller
-    private final CommandXboxController driver = new CommandXboxController(0);
-    private final CommandXboxController operator = new CommandXboxController(1);
-    private final LoggedDashboardChooser<Command> autoChooser;
-    private final Command pathplannerChooser;
+  // Controller
+  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandXboxController operator = new CommandXboxController(1);
+  private final LoggedDashboardChooser<Command> autoChooser;
+  private final Command pathplannerChooser;
 
-    /**
-     * The container for the robot. Contains subsystems, OI devices, and commands.
-     */
-    public RobotContainer() {
-        if (Robot.isReal()) {
-            drive = new Drive(
-                    new GyroIOPigeon2(),
-                    new ModuleIOSparkMax(new ModuleConfig().configure(0)),
-                    new ModuleIOSparkMax(new ModuleConfig().configure(1)),
-                    new ModuleIOSparkMax(new ModuleConfig().configure(2)),
-                    new ModuleIOSparkMax(new ModuleConfig().configure(3)));
-            elevator = new Elevator(new ElevatorIOSpark());
-        } else {
-            // Sim robot, instantiate physics sim IO implementations
-            drive = new Drive(
-                    new GyroIO() {},
-                    new ModuleIOSim(TunerConstants.FrontLeft),
-                    new ModuleIOSim(TunerConstants.FrontRight),
-                    new ModuleIOSim(TunerConstants.BackLeft),
-                    new ModuleIOSim(TunerConstants.BackRight));
-            elevator = new Elevator(new ElevatorIOSim());
-        }
-
-        // Set up auto routines
-        autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");
-        autoChooser.addOption("None", Commands.print("No Auto Selected"));
-
-        // Set up SysId routines
-        autoChooser.addOption(
-                "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-        autoChooser.addOption(
-                "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)",
-                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)",
-                drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-                "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-
-        autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
-        pathplannerChooser = new PathPlannerAuto("middle");
-        autoChooser.addDefaultOption("Middle", pathplannerChooser);
-
-        // Configure the button bindings
-        configureButtonBindings();
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public RobotContainer() {
+    if (Robot.isReal()) {
+      drive =
+          new Drive(
+              new GyroIOPigeon2(),
+              new ModuleIOSparkMax(new ModuleConfig().configure(0)),
+              new ModuleIOSparkMax(new ModuleConfig().configure(1)),
+              new ModuleIOSparkMax(new ModuleConfig().configure(2)),
+              new ModuleIOSparkMax(new ModuleConfig().configure(3)));
+      elevator = new Elevator(new ElevatorIOSpark());
+    } else {
+      // Sim robot, instantiate physics sim IO implementations
+      drive =
+          new Drive(
+              new GyroIO() {},
+              new ModuleIOSim(TunerConstants.FrontLeft),
+              new ModuleIOSim(TunerConstants.FrontRight),
+              new ModuleIOSim(TunerConstants.BackLeft),
+              new ModuleIOSim(TunerConstants.BackRight));
+      elevator = new Elevator(new ElevatorIOSim());
     }
 
-    private void configureButtonBindings() {
-        // Default command, normal field-relative drive
-        drive.setDefaultCommand(
-                DriveCommands.joystickDrive(
-                        drive,
-                        () -> driver.getLeftY(),
-                        () -> driver.getLeftX(),
-                        () -> -driver.getRightX(),
-                        () -> OperatorConstants.deadband,
-                        () -> 1));
-        driver
-                .x()
-                .whileTrue(
-                        DriveCommands.joystickDrive(
-                                drive,
-                                () -> -driver.getLeftY(),
-                                () -> -driver.getLeftX(),
-                                () -> -driver.getRightX(),
-                                () -> OperatorConstants.deadband,
-                                () -> OperatorConstants.precisionMode));
+    // Set up auto routines
+    autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");
+    autoChooser.addOption("None", Commands.print("No Auto Selected"));
 
-        // Lock to 0° when A button is held
-        driver
-                .a()
-                .whileTrue(
-                        DriveCommands.joystickDriveAtAngle(
-                                drive,
-                                () -> driver.getLeftY(),
-                                () -> driver.getLeftX(),
-                                () -> new Rotation2d(),
-                                () -> OperatorConstants.deadband));
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        // Switch to X pattern when X button is pressed
-        driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-        driver.y().onTrue(Commands.runOnce(drive::logPose, drive));
+    autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+    pathplannerChooser = new PathPlannerAuto("middle");
+    autoChooser.addDefaultOption("Middle", pathplannerChooser);
 
-        // Reset gyro to 0° when B button is pressed
-        driver
-                .b()
-                .onTrue(
-                        Commands.runOnce(
-                                () -> drive.setPose(
-                                        new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                                drive)
-                                .ignoringDisable(true));
+    // Configure the button bindings
+    configureButtonBindings();
+  }
 
+  private void configureButtonBindings() {
+    // Default command, normal field-relative drive
+    drive.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            drive,
+            () -> driver.getLeftY(),
+            () -> driver.getLeftX(),
+            () -> -driver.getRightX(),
+            () -> OperatorConstants.deadband,
+            () -> 1));
+    driver
+        .x()
+        .whileTrue(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX(),
+                () -> OperatorConstants.deadband,
+                () -> OperatorConstants.precisionMode));
 
+    // Lock to 0° when A button is held
+    driver
+        .a()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> driver.getLeftY(),
+                () -> driver.getLeftX(),
+                () -> new Rotation2d(),
+                () -> OperatorConstants.deadband));
 
-        operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
-        operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
-        operator.b().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L2));
-        operator.a().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L1));
-        operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
-        operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
+    // Switch to X pattern when X button is pressed
+    driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    driver.y().onTrue(Commands.runOnce(drive::logPose, drive));
 
-        operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
+    // Reset gyro to 0° when B button is pressed
+    driver
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
 
-        // PARMS (Subsystem, Alliance) if True BLUE alliancce if False RED alliance
-        driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
-        driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
-        driver.povDown().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
+    operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
+    operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
+    operator.b().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L2));
+    operator.a().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L1));
+    operator.povDown().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.ZERO));
+    operator.povUp().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.INTAKE));
 
-        operator
-                .rightTrigger()
-                .whileTrue(
-                        elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
-                .onFalse(elevator.setVoltage(() -> 0));
-        // on left, test and get Connor's feedback on
-        // input squaring
-    }
+    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
-    public Command getAutonomousCommand() {
-        return Commands.print("No Auto on DevBot, using Comp Bot");
-    }
+    // PARMS (Subsystem, Alliance) if True BLUE alliancce if False RED alliance
+    driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
+    driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
+    driver.povDown().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
+
+    operator
+        .rightTrigger()
+        .whileTrue(
+            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
+        .onFalse(elevator.setVoltage(() -> 0));
+    // on left, test and get Connor's feedback on
+    // input squaring
+  }
+
+  public Command getAutonomousCommand() {
+    return Commands.print("No Auto on DevBot, using Comp Bot");
+  }
 }
