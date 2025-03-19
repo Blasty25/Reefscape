@@ -14,7 +14,6 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -55,10 +54,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class Drive extends SubsystemBase {
-  // DriveConstants doesn't include these constants, so they are declared locally
-  static final double ODOMETRY_FREQUENCY =
-      new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+public class Drive extends SubsystemBase { 
   public static final double DRIVE_BASE_RADIUS =
       Math.max(
           Math.max(
@@ -123,7 +119,7 @@ public class Drive extends SubsystemBase {
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
     // Start odometry thread
-    PhoenixOdometryThread.getInstance().start();
+    SparkOdometryThread.getInstance().start();
 
     try {
       config = RobotConfig.fromGUISettings();
@@ -409,24 +405,6 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
-  }
-
-  public void followTrajectory(SwerveSample sample) {
-    autoHeadingPID.enableContinuousInput(-Math.PI, Math.PI);
-    // Get the current pose of the robot
-    Pose2d pose = getPose();
-
-    // Generate the next speeds for the robot
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            sample.vx + autoXPID.calculate(pose.getX(), sample.x),
-            sample.vy + autoYPID.calculate(pose.getY(), sample.y),
-            sample.omega
-                + autoHeadingPID.calculate(
-                    pose.getRotation().getRadians(),
-                    Rotation2d.fromRadians(sample.heading).getRadians()));
-
-    this.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.getRotation()));
   }
 
   public Rotation2d getReefAngle() {
