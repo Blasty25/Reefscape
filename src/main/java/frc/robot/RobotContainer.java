@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,23 +33,16 @@ import frc.robot.subsystems.drive.ModuleConfig;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOSparkMax;
 import frc.robot.subsystems.drive.TunerConstants;
-import frc.robot.subsystems.elevator.Commands.Autovator;
-import frc.robot.subsystems.elevator.Commands.Reset;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
-import frc.robot.subsystems.outtake.Commands.Shoot;
-import frc.robot.subsystems.outtake.Outtake;
-import frc.robot.subsystems.outtake.OuttakeIOSim;
-import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
     // Subsystems
-    public Drive drive;
-    public Elevator elevator;
-    public Outtake outtake;
+    public final Drive drive;
+    public final Elevator elevator;
     public final PoseAllignment autoPose = new PoseAllignment();
 
     // Controller
@@ -74,14 +66,12 @@ public class RobotContainer {
         } else {
             // Sim robot, instantiate physics sim IO implementations
             drive = new Drive(
-                    new GyroIO() {
-                    },
+                    new GyroIO() {},
                     new ModuleIOSim(TunerConstants.FrontLeft),
                     new ModuleIOSim(TunerConstants.FrontRight),
                     new ModuleIOSim(TunerConstants.BackLeft),
                     new ModuleIOSim(TunerConstants.BackRight));
             elevator = new Elevator(new ElevatorIOSim());
-            outtake = new Outtake(new OuttakeIOSim());
         }
 
         // Set up auto routines
@@ -158,15 +148,7 @@ public class RobotContainer {
                                 drive)
                                 .ignoringDisable(true));
 
-        driver
-                .leftTrigger()
-                .whileTrue(
-                        outtake
-                                .setVoltage(() -> -2)
-                                .until(() -> outtake.getDetected() && elevator.intaking())
-                                .andThen(() -> outtake.setVoltage(0)));
 
-        driver.rightTrigger().onTrue(outtake.setVoltage(() -> 12)).onFalse(outtake.setVoltage(() -> 0));
 
         operator.y().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L4));
         operator.x().onTrue(elevator.setSetpoint(() -> ElevatorSetpoint.L3));
@@ -192,9 +174,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        NamedCommands.registerCommand("autovator", new Autovator(elevator));
-        NamedCommands.registerCommand("reset", new Reset(elevator, outtake));
-        NamedCommands.registerCommand("shoot", new Shoot(outtake)); // check voltage later
-        return autoChooser.get();
+        return Commands.print("No Auto on DevBot, using Comp Bot");
     }
 }
