@@ -38,12 +38,4 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
-
-  public static enum Robot {
-    Dev,
-
-    Comp
-  }
-
-  public static final Robot robot = Robot.Dev;
 }
