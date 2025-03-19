@@ -23,6 +23,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -34,11 +35,9 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
 
-  private static final String LOG_DIRECTORY = "/media/sda";
-
-
   public Robot() {
     // Record metadata
+    Pathfinding.setPathfinder(new LocalADStarAK());
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
