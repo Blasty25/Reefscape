@@ -413,7 +413,6 @@ public class Drive extends SubsystemBase {
 
   public void followTrajectory(SwerveSample sample) {
     autoHeadingPID.enableContinuousInput(-Math.PI, Math.PI);
-
     // Get the current pose of the robot
     Pose2d pose = getPose();
 
@@ -432,6 +431,10 @@ public class Drive extends SubsystemBase {
 
   public Rotation2d getReefAngle() {
     return new Rotation2d();
+  }
+
+  public ChassisSpeeds robotRelativeSpeed() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getRotation());
   }
 
   public Pose2d autoLeftPose(boolean alliance) {

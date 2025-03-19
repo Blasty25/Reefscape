@@ -70,8 +70,7 @@ public class DriveCommands {
               getLinearVelocityFromJoysticks(
                   Math.signum(xSupplier.getAsDouble()) * Math.pow(xSupplier.getAsDouble(), 2),
                   Math.signum(ySupplier.getAsDouble()) * Math.pow(ySupplier.getAsDouble(), 2),
-                  deadbandSupplier
-                      .getAsDouble()); // TODO: added input squaring - get feedback from james
+                  deadbandSupplier.getAsDouble());
 
           // Apply rotation deadband
           double omega =

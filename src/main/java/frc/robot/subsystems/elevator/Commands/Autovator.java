@@ -7,13 +7,11 @@ package frc.robot.subsystems.elevator.Commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
-import frc.robot.subsystems.elevator.ElevatorIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class Autovator extends Command {
   public Elevator elevator;
-  private ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
   public Autovator(Elevator elevator) {
     this.elevator = elevator;

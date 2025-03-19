@@ -7,7 +7,6 @@ package frc.robot.subsystems.elevator.Commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
-import frc.robot.subsystems.elevator.ElevatorIOInputsAutoLogged;
 import frc.robot.subsystems.outtake.Outtake;
 import org.littletonrobotics.junction.Logger;
 
@@ -15,7 +14,6 @@ import org.littletonrobotics.junction.Logger;
 public class Reset extends Command {
   public Elevator elevator;
   public Outtake outtake;
-  private ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
   public Reset(Elevator elevator, Outtake outtake) {
     this.elevator = elevator;

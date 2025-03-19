@@ -34,20 +34,19 @@ import frc.robot.subsystems.drive.Commands.HumanPlayerRoute;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleConfig;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.ModuleIOSparkMax;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Commands.Autovator;
 import frc.robot.subsystems.elevator.Commands.Reset;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorSetpoint;
-import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOSpark;
 import frc.robot.subsystems.outtake.Commands.Shoot;
 import frc.robot.subsystems.outtake.Outtake;
-import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -60,9 +59,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
   // Subsystems
-  public final Drive drive;
-  public final Elevator elevator;
-  public final Outtake outtake;
+  public Drive drive;
+  public Elevator elevator;
+  public Outtake outtake;
   public final PoseAllignment autoPose = new PoseAllignment();
 
   // Controller
@@ -78,62 +77,43 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-        elevator = new Elevator(new ElevatorIOSpark());
-        outtake = new Outtake(new OuttakeIOSpark());
-        break;
+    if (Robot.isReal()) {
+      switch (Constants.robot) {
+        case Comp:
+          drive =
+              new Drive(
+                  new GyroIOPigeon2(),
+                  new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                  new ModuleIOTalonFX(TunerConstants.FrontRight),
+                  new ModuleIOTalonFX(TunerConstants.BackLeft),
+                  new ModuleIOTalonFX(TunerConstants.BackRight));
+          elevator = new Elevator(new ElevatorIOSpark());
+          outtake = new Outtake(new OuttakeIOSpark());
+          break;
 
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSim());
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {});
-        break;
+        case Dev:
+          drive =
+              new Drive(
+                  new GyroIOPigeon2(),
+                  new ModuleIOSparkMax(new ModuleConfig().configure(0)),
+                  new ModuleIOSparkMax(new ModuleConfig().configure(1)),
+                  new ModuleIOSparkMax(new ModuleConfig().configure(2)),
+                  new ModuleIOSparkMax(new ModuleConfig().configure(0)));
+          elevator = new Elevator(new ElevatorIOSpark());
+          break;
+      }
+    } else {
+      // Sim robot, instantiate physics sim IO implementations
+      drive =
+          new Drive(
+              new GyroIO() {},
+              new ModuleIOSim(TunerConstants.FrontLeft),
+              new ModuleIOSim(TunerConstants.FrontRight),
+              new ModuleIOSim(TunerConstants.BackLeft),
+              new ModuleIOSim(TunerConstants.BackRight));
+      elevator = new Elevator(new ElevatorIOSim());
+      outtake = new Outtake(new OuttakeIOSim());
     }
-
-    // outtakeCommands =
-    // new EnumMap<ElevatorSetpoint, Command>(
-    // Map.ofEntries(
-    // Map.entry(ElevatorSetpoint.ZERO, outtake.setVoltage(() -> -2)),
-    // Map.entry(
-    // ElevatorSetpoint.INTAKE,
-    // outtake
-    // .setVoltage(() -> -2)
-    // .until(() -> outtake.getDetected())
-    // .andThen(outtake.setVoltage(() -> 0))),
-    // Map.entry(ElevatorSetpoint.L1, outtake.setVoltage(() -> 12)),
-    // Map.entry(ElevatorSetpoint.L2, outtake.setVoltage(() -> -2)),
-    // Map.entry(ElevatorSetpoint.DEALGAE2, outtake.setVoltage(() -> 12)),
-    // Map.entry(ElevatorSetpoint.L3, outtake.setVoltage(() -> -2)),
-    // Map.entry(ElevatorSetpoint.L4, outtake.setVoltage(() -> -2))));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Tuning Auto Chooser");

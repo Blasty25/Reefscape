@@ -233,8 +233,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> // voltageRequest.withOutput(output /
           // DriveConstants.kSpeedAt12Volts.magnitude() * 12.0);
-          voltageRequest.withOutput(
-              output); // TODO: changed to velocity control, make sure it works
+          voltageRequest.withOutput(output);
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
         });
   }

@@ -34,6 +34,7 @@ public interface ModuleIO {
     public double turnAppliedVolts = 0.0;
     public double turnCurrentAmps = 0.0;
     public double turnTemperatureCelsius = 0.0;
+    public double encoderOffset = 0.0;
 
     public double[] odometryTimestamps = new double[] {};
     public double[] odometryDrivePositionsRad = new double[] {};

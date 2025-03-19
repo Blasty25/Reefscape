@@ -130,7 +130,6 @@ public class AutoRoutines {
     AutoRoutine routine = autoFactory.newRoutine("redXToCL4");
 
     AutoTrajectory redXToCL = routine.trajectory("mirrored_blueXToER");
-    AutoTrajectory CLToredX = routine.trajectory("mirrored_ERToblueX");
 
     routine.active().onTrue(Commands.sequence(redXToCL.resetOdometry(), redXToCL.cmd()));
 
