@@ -43,8 +43,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.Constants;
+import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.ArrayList;
@@ -69,7 +69,6 @@ public class Drive extends SubsystemBase {
 
   static final Lock odometryLock = new ReentrantLock();
   private List<Pose2d> poseHistory = new ArrayList<>();
-  private final PoseAllignment poseAllignment = new PoseAllignment();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
@@ -122,7 +121,7 @@ public class Drive extends SubsystemBase {
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
     // Start odometry thread
-    PhoenixOdometryThread.getInstance().start();
+    // PhoenixOdometryThread.getInstance().start();
 
     try {
       config = RobotConfig.fromGUISettings();
@@ -421,32 +420,33 @@ public class Drive extends SubsystemBase {
   public Pose2d autoLeftPose(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueLeft);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.blueLeft);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redLeft);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.redLeft);
     }
-    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose.getTranslation());
+    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose",
+    targetPose.getTranslation());
     return targetPose;
   }
 
   public Pose2d autoRightPose(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueRight);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.blueRight);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redRight);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.redRight);
     }
     Logger.recordOutput(
-        "Drive/Deubg/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+    "Drive/Deubg/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
     return targetPose;
   }
 
   public Pose2d autoHP(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPBlue);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.HPBlue);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPRed);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.HPRed);
     }
 
     Logger.recordOutput("Drive/Debug/PathPlanner/Pose/HPPose", targetPose.getTranslation());

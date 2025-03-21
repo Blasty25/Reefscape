@@ -12,12 +12,12 @@ import java.util.List;
 /** Add your docs here. */
 public class PoseAllignment {
 
-  public List<Pose2d> blueLeft = new ArrayList<>();
-  public List<Pose2d> blueRight = new ArrayList<>();
-  public List<Pose2d> redLeft = new ArrayList<>();
-  public List<Pose2d> redRight = new ArrayList<>();
-  public List<Pose2d> HPRed = new ArrayList<>();
-  public List<Pose2d> HPBlue = new ArrayList<>();
+  public static final List<Pose2d> blueLeft = new ArrayList<>();
+  public static final List<Pose2d> blueRight = new ArrayList<>();
+  public static final List<Pose2d> redLeft = new ArrayList<>();
+  public static final List<Pose2d> redRight = new ArrayList<>();
+  public static final List<Pose2d> HPRed = new ArrayList<>();
+  public static final List<Pose2d> HPBlue = new ArrayList<>();
 
   public PoseAllignment() {
     blueLeft.add(new Pose2d(3.190, 4.142, new Rotation2d()));
