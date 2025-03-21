@@ -15,7 +15,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -54,7 +53,7 @@ public class RobotContainer {
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController operator = new CommandXboxController(1);
   private final LoggedDashboardChooser<Command> autoChooser;
-    private final Command pathplannerChooser;
+  private final Command pathplannerChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -176,8 +175,10 @@ public class RobotContainer {
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
 
     // PARMS (Subsystem, Alliance) if True BLUE alliancce if False RED alliance
-    driver.leftBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
+    // driver.leftBumper().whileTrue(new AutoLeftFind(drive, Constants.allianceMode));
+    driver.rightBumper().whileTrue(new AutoRightFind(drive, Constants.allianceMode));
     driver.povDown().whileTrue(new HumanPlayerRoute(drive, Constants.allianceMode));
+    driver.leftBumper().onTrue(drive.followTraj());
 
     operator
         .rightTrigger()

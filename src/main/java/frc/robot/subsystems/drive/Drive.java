@@ -24,7 +24,9 @@ import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -36,15 +38,22 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.LinearAcceleration;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.AutoUtil.PathPlanner.PoseAllignment;
+import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.ArrayList;
@@ -99,11 +108,24 @@ public class Drive extends SubsystemBase {
   private PIDController autoXPID = new PIDController(XkP.getAsDouble(), 0.0, 0.0);
   private PIDController autoYPID = new PIDController(YkP.getAsDouble(), 0.0, 0.0);
   private PIDController autoHeadingPID = new PIDController(headingkP.getAsDouble(), 0.0, 0.0);
+  private ProfiledPIDController trajHeading =
+      new ProfiledPIDController(headingkP.getAsDouble(), 0.0, 0.0, new Constraints(3.5, 3.5));
 
   public PathConstraints constraints =
       new PathConstraints(5.25, 4.75, Units.degreesToRadians(640), Units.degreesToRadians(820));
 
-  public Pose2d targetAllignmentPose;
+  public TrajectoryConfig trajectoryConfig =
+      new TrajectoryConfig(
+              LinearVelocity.ofBaseUnits(4.30, MetersPerSecond),
+              LinearAcceleration.ofBaseUnits(4.99, MetersPerSecondPerSecond))
+          .setKinematics(kinematics)
+          .setReversed(false)
+          .setStartVelocity(0.3)
+          .setEndVelocity(3.0);
+
+  public HolonomicDriveController trajDriveController =
+      new HolonomicDriveController(autoXPID, autoYPID, trajHeading);
+  public PoseAllignment poseAllignment = new PoseAllignment();
 
   public Drive(
       GyroIO gyroIO,
@@ -121,7 +143,7 @@ public class Drive extends SubsystemBase {
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
     // Start odometry thread
-    // PhoenixOdometryThread.getInstance().start();
+    PhoenixOdometryThread.getInstance().start();
 
     try {
       config = RobotConfig.fromGUISettings();
@@ -417,39 +439,61 @@ public class Drive extends SubsystemBase {
     return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getRotation());
   }
 
+  @AutoLogOutput(key = "Drive/Debug/PathPlanner/LeftAlign")
   public Pose2d autoLeftPose(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.blueLeft);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueLeft);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.redLeft);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redLeft);
     }
-    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose",
-    targetPose.getTranslation());
+    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/LeftTargetPose", targetPose);
     return targetPose;
   }
 
+  @AutoLogOutput(key = "Drive/Debug/PathPlanner/RightAlign")
   public Pose2d autoRightPose(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.blueRight);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.blueRight);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.redRight);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.redRight);
     }
-    Logger.recordOutput(
-    "Drive/Deubg/PathPlanner/Pose/RightTargetPose", targetPose.getTranslation());
+    Logger.recordOutput("Drive/Deubg/PathPlanner/Pose/RightTargetPose", targetPose);
     return targetPose;
   }
 
   public Pose2d autoHP(boolean alliance) {
     Pose2d targetPose;
     if (alliance == true) {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.HPBlue);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPBlue);
     } else {
-      targetPose = poseEstimator.getEstimatedPosition().nearest(PoseAllignment.HPRed);
+      targetPose = poseEstimator.getEstimatedPosition().nearest(poseAllignment.HPRed);
     }
 
-    Logger.recordOutput("Drive/Debug/PathPlanner/Pose/HPPose", targetPose.getTranslation());
+    Logger.recordOutput("Drive/Debug/PathPlanner/Pose/HPPose", targetPose);
     return targetPose;
+  }
+
+  public Command followTraj() {
+    return new RunCommand(
+        () -> {
+          Pose2d robotPose = poseEstimator.getEstimatedPosition();
+          Pose2d target = robotPose.nearest(poseAllignment.redLeft);
+
+          Trajectory traj =
+              TrajectoryGenerator.generateTrajectory(
+                  robotPose, List.of(), target, trajectoryConfig);
+
+          Trajectory.State desiredState = traj.sample(traj.getTotalTimeSeconds());
+          Logger.recordOutput("Drive/PID/Align", target);
+          ChassisSpeeds zoom =
+              trajDriveController.calculate(robotPose, desiredState, target.getRotation());
+          this.runVelocity(zoom);
+          if (trajDriveController.atReference()) {
+            this.runVelocity(new ChassisSpeeds());
+          }
+        },
+        this);
   }
 }
